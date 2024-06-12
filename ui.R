@@ -59,7 +59,7 @@ shinyUI(
                        div(HTML("<h4><b>eLTER site</b></h4>")),
                        selectInput(
                          inputId = "site",
-                         label = "Select a eLTER site",
+                         label = "Select an eLTER site",
                          multiple = FALSE,
                          choices = sites_list,
                          selected = "https://deims.org/f30007c4-8a6e-4f11-ab87-569db54638fe"
@@ -68,12 +68,12 @@ shinyUI(
                        div(HTML("<hr><h4><b>EVs</b></h4>")),
                        selectInput(
                          inputId = "ev",
-                         label = HTML("Select a EV"), 
+                         label = HTML("Select an EV"), 
                          multiple = FALSE,
                          choices = EVs_list,
                          selected = "https://gcos.wmo.int/en/essential-climate-variables/lakes"
                        ),
-                       actionButton("sendFile", "Upload observations", icon = icon("file-upload")),
+                       actionButton("sendFile", "Explore", icon = icon("file-upload")),
                 )
               ),
               box(
@@ -94,19 +94,42 @@ shinyUI(
               )
             ),
             fluidRow(
+              # box(
+              #   width = 12,
+              #   title = "Visualization",
+              #   closable = FALSE,
+              #   status = "info",
+              #   solidHeader = FALSE,
+              #   collapsible = TRUE,
+              #   enable_sidebar = TRUE,
+              #   sidebar_width = 25,
+              #   sidebar_start_open = FALSE,
+              #   sidebar_content = tagList(
+              #     tags$p(".."),
+              #     tags$p(tags$b(".."))
+              #   )
+              # ),
               box(
                 width = 12,
-                title = "Visualization",
-                closable = FALSE,
-                status = "info",
-                solidHeader = FALSE,
-                collapsible = TRUE,
-                enable_sidebar = TRUE,
-                sidebar_width = 25,
-                sidebar_start_open = FALSE,
-                sidebar_content = tagList(
-                  tags$p(".."),
-                  tags$p(tags$b(".."))
+                  title = "Visualization",
+                  closable = FALSE,
+                  status = "info",
+                  solidHeader = FALSE,
+                  collapsible = TRUE,
+                  enable_sidebar = TRUE,
+                  sidebar_width = 25,
+                  sidebar_start_open = FALSE,
+                  sidebar_content = tagList(
+                    tags$p(".."),
+                    tags$p(tags$b(".."))
+                  ),
+                tabBox(width = 12,
+                       # side = "right",
+                       # height = "250px",
+                       selected = "Map",
+                       tabPanel("Map", "Tab content 1"),
+                       tabPanel("Table", "Tab content 2"),
+                       tabPanel("Chart", "Note that when side=right, the tab order is reversed.")
                 )
               )
             )
