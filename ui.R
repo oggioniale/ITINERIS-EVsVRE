@@ -48,12 +48,6 @@ shinyUI(
                 solidHeader = FALSE, 
                 collapsible = TRUE,
                 enable_sidebar = TRUE,
-                sidebar_width = 25,
-                sidebar_start_open = FALSE,
-                sidebar_content = tagList(
-                  tags$p(".."),
-                  tags$p(tags$b(".."))
-                ),
                 column(12,
                        # Input: eLTER site
                        div(HTML("<h4><b>eLTER site</b></h4>")),
@@ -78,58 +72,35 @@ shinyUI(
               ),
               box(
                 width = 8,
-                title = "Info about selection", 
+                title = "Info box", 
                 closable = FALSE, 
                 status = "info", 
                 solidHeader = FALSE, 
                 collapsible = TRUE,
                 enable_sidebar = TRUE,
-                sidebar_width = 25,
-                sidebar_start_open = FALSE,
-                sidebar_content = tagList(
-                  tags$p(".."),
-                  tags$p(".."),
-                  tags$p(tags$b(".."))
-                )
+                infoBox("Numero di dataset che contribuiscono alla EV selezionata", 4, icon = icon("credit-card")),
+                infoBox("Numero di dataset accessori", 2, icon = icon("credit-card")),
+                infoBox("Numero di dataset che rispondono alle parole chiave nome sito e variabile in repo quali: DEIMS, Zenodo, Pangea, B2Share", 7, icon = icon("credit-card")),
+                "Inserire: 1. info al sito con nome, PID (DEIMS.ID) linkabile; 2. info della EV selezionata con nome completo EV, link alla pagina; 3. tabella con dataset(s) riferiti alla EV selezionata, dataset(s) accessori (es. iNat, GBIF, ecc.) e dataset che sono presenti in repo non strutturati (es. DEIMS, Zenodo, Pangea, B2Share) i campi di questa tabella dovrabbero essere titolo dataset, sorgente, PID. Infine solo i dataset(s) che possono essere visibili nel pannello sottostante dovrebbero essere cliccabili."
               )
             ),
             fluidRow(
-              # box(
-              #   width = 12,
-              #   title = "Visualization",
-              #   closable = FALSE,
-              #   status = "info",
-              #   solidHeader = FALSE,
-              #   collapsible = TRUE,
-              #   enable_sidebar = TRUE,
-              #   sidebar_width = 25,
-              #   sidebar_start_open = FALSE,
-              #   sidebar_content = tagList(
-              #     tags$p(".."),
-              #     tags$p(tags$b(".."))
-              #   )
-              # ),
               box(
                 width = 12,
-                  title = "Visualization",
-                  closable = FALSE,
-                  status = "info",
-                  solidHeader = FALSE,
-                  collapsible = TRUE,
-                  enable_sidebar = TRUE,
-                  sidebar_width = 25,
-                  sidebar_start_open = FALSE,
-                  sidebar_content = tagList(
-                    tags$p(".."),
-                    tags$p(tags$b(".."))
-                  ),
-                tabBox(width = 12,
-                       # side = "right",
-                       # height = "250px",
-                       selected = "Map",
-                       tabPanel("Map", "Tab content 1"),
-                       tabPanel("Table", "Tab content 2"),
-                       tabPanel("Chart", "Note that when side=right, the tab order is reversed.")
+                title = "Visualization",
+                closable = FALSE,
+                status = "info",
+                solidHeader = FALSE,
+                collapsible = TRUE,
+                enable_sidebar = TRUE,
+                tabBox(
+                  width = 12,
+                  # side = "right",
+                  # height = "250px",
+                  selected = "Map",
+                  tabPanel("Map", "Tab content 1"),
+                  tabPanel("Table", "Tab content 2"),
+                  tabPanel("Chart", "Note that when side=right, the tab order is reversed.")
                 )
               )
             )
