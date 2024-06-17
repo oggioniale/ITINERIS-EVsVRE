@@ -12,6 +12,39 @@ fluidPage(
     # collapse_sidebar = TRUE,
     header = dashboardHeader(
       title = tagList(
+        tags$head(tags$style(HTML('.navbar {
+                                background-color: #FFFFFF !important;
+                              }
+                              .logo {
+                                background-color: #FFF !important;
+                                color: #595959 !important;
+                              }
+                              .sidebar-toggle {
+                                background-color: #FFF !important;
+                                color: #595959 !important;
+                              }
+                              .skin-blue .main-header .navbar .sidebar-toggle:hover {
+                                background-color: #00a54f !important;
+                                color: #595959 !important;
+                              }
+                              .skin-blue .sidebar-menu > li.active > a, .skin-blue .sidebar-menu > li:hover > a {
+                                background-color: #3d403e !important;
+                                color: #FFF !important;
+                                border-left-color: #00a54f !important;
+                              }
+                              .skin-blue .left-side, .skin-blue .main-sidebar, .skin-blue .wrapper {
+                                background-color:#3d403e !important;
+                              }
+                              .box.box-info {
+                                border-top-color: #00a54f !important;
+                              }
+                              .nav-tabs-custom > .nav-tabs > li.active {
+                                border-top-color: #00a54f !important;
+                              }
+                              .alert-info, .bg-aqua, .callout.callout-info, .label-info, .modal-info .modal-body {
+                                background-color: #00a54f !important;
+                              }
+                              '))),
         tags$span(class = "logo-lg", "EVs VRE"), 
         tags$img(src = "images/Logo_ITINERIS_globo-01.png")), 
       # fixed = FALSE,
