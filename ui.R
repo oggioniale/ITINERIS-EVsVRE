@@ -62,6 +62,7 @@ fluidPage(
       #         actionButton("help", "Give me an overview", style="margin-right: 10px; margin-top: 8px; color: #fff; background-color: #0069D9; border-color: #0069D9")
       # )
     ),
+    # sidebar = dashboardSidebar(disable = TRUE),
     sidebar = dashboardSidebar(
       collapsed = TRUE,
       sidebarMenu(
@@ -108,6 +109,26 @@ fluidPage(
                      ),
                      actionButton("sendFile", "Explore", icon = icon("file-upload")),
               )
+            ),
+            box( # site info
+              width = 4,
+              title = "Site", 
+              closable = FALSE, 
+              status = "info", 
+              solidHeader = FALSE, 
+              collapsible = TRUE,
+              enable_sidebar = TRUE,
+              uiOutput("siteinfo")
+            ),
+            box( # EV info
+              width = 4,
+              title = "EV", 
+              closable = FALSE, 
+              status = "info", 
+              solidHeader = FALSE, 
+              collapsible = TRUE,
+              enable_sidebar = TRUE,
+              textOutput("EVinfo")
             ),
             box(
               width = 8,
