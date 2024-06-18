@@ -8,7 +8,6 @@ library(leaflet)
 
 fluidPage(
   dashboardPage(
-    skin = "blue",
     # collapse_sidebar = TRUE,
     header = dashboardHeader(
       title = tagList(
