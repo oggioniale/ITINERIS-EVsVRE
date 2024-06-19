@@ -224,6 +224,9 @@ getBroker=function(){
   
   keyword_data<-function(){return("TBD")}
   
+  # zenodo
+  # https://zenodo.org/communities/lter-italy/records?q=lake%20maggiore&l=list&p=1&s=10&sort=bestmatch
+  
   
   # # TODO: check this if useful
   {
@@ -292,12 +295,13 @@ getBroker=function(){
   )
   
   
-  self$test<-function(){
+  self$getSelectedSiteDeimsid<-function(){
     return(selected_site)
   }
   
   # Pangaea dataset ----
-  search_pangaea <- function(deimsid) {
+  self$search_pangaea <- function() {
+    deimsid<-selected_site
     boundary <- ReLTER::get_site_info(
       deimsid,
       category = "Boundaries"
@@ -310,6 +314,7 @@ getBroker=function(){
         as.double()
     }
     pgRecords <- pangaear::pg_search(query = '*', bbox = c(bbox[1], bbox[2], bbox[3], bbox[4]))
+    return(pgRecords)
   }
   
   
