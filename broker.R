@@ -296,6 +296,22 @@ getBroker=function(){
     return(selected_site)
   }
   
+  # Pangaea dataset ----
+  search_pangaea <- function(deimsid) {
+    boundary <- ReLTER::get_site_info(
+      deimsid,
+      category = "Boundaries"
+    )
+    if (is.null(boundary) || !inherits(boundary, "sf")) {
+      print("No boundary for requested DEIMS site.")
+      return(NULL)
+    } else {
+      bbox <- sf::st_bbox(boundary) %>%
+        as.double()
+    }
+    pgRecords <- pangaear::pg_search(query = '*', bbox = c(bbox[1], bbox[2], bbox[3], bbox[4]))
+  }
+  
   
   print("broker.R: finished preparation")
   # export
