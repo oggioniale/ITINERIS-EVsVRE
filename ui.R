@@ -128,7 +128,7 @@ fluidPage(
               solidHeader = FALSE, 
               collapsible = TRUE,
               enable_sidebar = TRUE,
-              textOutput("EVinfo")
+              uiOutput("EVinfo")
             ),
             box(
               width = 8,

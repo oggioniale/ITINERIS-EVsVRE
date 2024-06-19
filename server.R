@@ -1,4 +1,5 @@
 library(shiny)
+library(shinybusy) # 
 #source(broker)
 
 # Define server logic required to draw a histogram
@@ -12,7 +13,13 @@ function(input, output, session) {
   )
   
   observeEvent(input$site, {
+    message("ev site$ev:", input$site)
     status$selectedSite <- input$site
+  })
+  
+  observeEvent(input$ev, {
+    message("ev input$ev:", input$ev)
+    status$selectedEv <- input$ev
   })
   
   observeEvent(status$selectedSite, {
@@ -36,11 +43,16 @@ function(input, output, session) {
       selected = ""
     )
     
-    x<-broker$getInfo_Site() # first call requires some time. 
-    # TODO: add a "progress" to notify this is loading
-    
+    shinybusy::show_modal_spinner(text="fetching data")
+    #withProgress(message="fetching data", {
+      x<-broker$getInfo_Site() # first call requires some time. 
+      # TODO: add a "progress" to notify this is loading
+    #})
+    shinybusy::remove_modal_spinner()
+    # load and present site info in panel
     output$siteinfo <- renderUI(tagList(
       a(x$val_title, href=x$val_uri, target="_blank"),
+      div(renderTable(t(x$tbl_generalInfo %>% as_data_frame()))),
       p("Yearly avg precipitation: ", x$val_precipitation, "[", units::deparse_unit(x$val_precipitation), "]"),
       p("Biome", x$val_geoBonBiome),
       p("Biogeographical Region:", x$val_biogeographicalRegion),
@@ -50,4 +62,24 @@ function(input, output, session) {
     
   })
   
+  observeEvent(status$selectedEv,{
+    req(status$selectedEv)
+    
+    broker$setEv(status$selectedEv)
+    message(status$selectedEv)
+    
+    # load and present ev info in panel
+    shinybusy::show_modal_spinner(text="fetching data")
+    #withProgress(message="fetching data", {
+      x<-broker$getEv()
+    #})
+    shinybusy::remove_modal_spinner()
+      #browser()
+    output$EVinfo <- renderUI(tagList(
+      a(x$name, href=x$webpage),
+      renderTable(x %>% dplyr::select(type, domain, uom), rownames = TRUE),
+      p(x$description)
+    ))
+    
+  })
 }
