@@ -162,14 +162,24 @@ getBroker=function(){
       #   - prenderei eventualmente i rights generalInfo.data.policy.rights[[1]] # array di testo
       #   - 
       # 
-      res1<-ReLTER::get_site_info(deimsid = selected_site, category = c(#"Boundaries", 
-        "EnvCharacts", "Affiliations", "observedProperties", "RelateRes", "Infrastructure"))
+      res1 <- ReLTER::get_site_info(
+        deimsid = selected_site,
+        category = c(
+          #"Boundaries", 
+          "EnvCharacts",
+          #"Affiliations",
+          #"observedProperties",
+          "RelateRes"#,
+          #"Infrastructure"
+        )
+      )
       
-      res$tbl_generalInfo <- res1 %>% dplyr::select(title, uri, geoCoord, 
-                                                    envCharacteristics.geoBonBiome, envCharacteristics.biogeographicalRegion, 
-                                                    all_of(starts_with("geoElev.")),
-                                                    all_of(starts_with("envCharacteristics.airTemperature."))
-                                                    )
+      res$tbl_generalInfo <- res1 %>%
+        dplyr::select(geoBonBiome,
+          biogeographicalRegion#, 
+          #all_of(starts_with("geoElev.")),
+          #all_of(starts_with("airTemperature."))
+        )
                                                     
                                                            
       
@@ -177,26 +187,26 @@ getBroker=function(){
       res$val_uri                   <- res1$uri
       res$wkt_coordinates           <- res1$geoCoord
       
-      res$sfc_boundariesPolygon     <- NULL #res1$boundaries
+      # res$sfc_boundariesPolygon     <- NULL #res1$boundaries
       
-      res$val_geoBonBiome           <- res1$envCharacteristics.geoBonBiome
-      res$val_biogeographicalRegion <- res1$envCharacteristics.biogeographicalRegion
+      # res$val_geoBonBiome           <- res1$geoBonBiome
+      # res$val_biogeographicalRegion <- res1$biogeographicalRegion
       
-      #elevunit<-units::as_units("m") # elev unit in deims is msl, not recognized by udunits
-      res$stats3num_elevation    <- units::set_units(c(min  = res1$geoElev.min, 
-                                                       mean = res1$geoElev.avg, 
-                                                        max = res1$geoElev.max), 
-                                                      "m")
-      res$val_airTempYearlyAvg   <- units::set_units(res1$envCharacteristics.airTemperature.yearlyAverage, 
-                                             res1$envCharacteristics.airTemperature.unit, mode = "standard")
-      res$val_precipitation      <- units::set_units(res1$envCharacteristics.precipitation.yearlyAverage, 
-                                          res1$envCharacteristics.precipitation.unit,mode = "standard")
+      # elevunit<-units::as_units("m") # elev unit in deims is msl, not recognized by udunits
+      # res$stats3num_elevation    <- units::set_units(c(min  = res1$geoElev.min, 
+      #                                                  mean = res1$geoElev.avg, 
+      #                                                   max = res1$geoElev.max), 
+      #                                                 "m")
+      # res$val_airTempYearlyAvg   <- units::set_units(res1$airTemperature.yearlyAverage, 
+      #                                        res1$airTemperature.unit, mode = "standard")
+      # res$val_precipitation      <- units::set_units(res1$precipitation.yearlyAverage, 
+      #                                     res1$precipitation.unit,mode = "standard")
       
       # tables
-      res$tbl_eunisHabitats      <- res1$envCharacteristics.eunisHabitat[[1]] %>% as_tibble() %>% dplyr::select(-uri)
-      res$tbl_observedProperties <- res1$observedProperties[[1]] %>% as_tibble()
+      res$tbl_eunisHabitats      <- res1$eunisHabitat[[1]] %>% as_tibble() %>% dplyr::select(-uri)
+      # res$tbl_observedProperties <- res1$observedProperties[[1]] %>% as_tibble()
       res$tbl_relatedResources   <- res1$relatedResources[[1]] %>% as_tibble()
-      res$tbl_dataPolicyRights   <- res1$generalInfo.data.policy.rights[[1]] %>% as_tibble()
+      # res$tbl_dataPolicyRights   <- res1$generalInfo.data.policy.rights[[1]] %>% as_tibble()
       
       cacheInfoSite[[selected_site]] <<- res
     }

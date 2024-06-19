@@ -52,12 +52,11 @@ function(input, output, session) {
     # load and present site info in panel
     output$siteinfo <- renderUI(tagList(
       a(x$val_title, href=x$val_uri, target="_blank"),
-      div(renderTable(t(x$tbl_generalInfo %>% as_data_frame()))),
-      p("Yearly avg precipitation: ", x$val_precipitation, "[", units::deparse_unit(x$val_precipitation), "]"),
-      p("Biome", x$val_geoBonBiome),
-      p("Biogeographical Region:", x$val_biogeographicalRegion),
-      div("habitats within the site", class="scroll", renderTable(x$tbl_eunisHabitats, striped = T, colnames = F))
-      
+      div(renderTable(t(x$tbl_generalInfo %>% as_data_frame())))#,
+      # p("Yearly avg precipitation: ", x$val_precipitation, "[", units::deparse_unit(x$val_precipitation), "]"),
+      # p("Biome", x$val_geoBonBiome),
+      # p("Biogeographical Region:", x$val_biogeographicalRegion),
+      # div("habitats within the site", class="scroll", renderTable(x$tbl_eunisHabitats, striped = T, colnames = F))
     ))
     
   })
