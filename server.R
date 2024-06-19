@@ -79,6 +79,59 @@ function(input, output, session) {
       renderTable(x %>% dplyr::select(type, domain, uom), rownames = TRUE),
       p(x$description)
     ))
-    
+  })
+  
+  # Tables box ----
+  exampleTibble <- tibble::tibble(
+    title = c("titolo1", "titolo2", "titolo3"),
+    url = c("url1/doi1", "url2/doi2", "url3/doi3"),
+    resType = c("Zenodo", "Pangaea", "iNat")
+  )
+  output$tableEVsData <- DT::renderDataTable({
+    tblEVsData <- exampleTibble
+    DT::datatable(
+      tblEVsData,
+      escape = FALSE,
+      caption = htmltools::tags$caption(
+        style = 'caption-side: bottom; text-align: center;',
+        'Tabella - ', htmltools::em(paste0(
+          'caption text'
+        ))
+      ),
+      filter = 'top'
+    )
+  })
+  output$tableOtherResData <- DT::renderDataTable({
+    tblOtherResData <- exampleTibble
+    DT::datatable(
+      tblOtherResData,
+      escape = FALSE,
+      caption = htmltools::tags$caption(
+        style = 'caption-side: bottom; text-align: center;',
+        'Tabella - ', htmltools::em(paste0(
+          'caption text'
+        ))
+      ),
+      filter = 'top'
+    )
+  })
+  output$tableOtherRepoData <- DT::renderDataTable({
+    tblOtherRepoData <- exampleTibble |>
+      dplyr::select(
+        Title = title,
+        `Resource link` = url,
+        `Resource repo` = resType
+      )
+    DT::datatable(
+      tblOtherRepoData,
+      escape = FALSE,
+      caption = htmltools::tags$caption(
+        style = 'caption-side: bottom; text-align: center;',
+        'Tabella - ', htmltools::em(paste0(
+          'caption text'
+        ))
+      ),
+      filter = 'top'
+    )
   })
 }
