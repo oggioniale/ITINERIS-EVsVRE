@@ -162,14 +162,22 @@ getBroker=function(){
       #   - prenderei eventualmente i rights generalInfo.data.policy.rights[[1]] # array di testo
       #   - 
       # 
-      res1<-ReLTER::get_site_info(deimsid = selected_site, category = c("Boundaries", "EnvCharacts", "Affiliations", "observedProperties", "RelateRes", "Infrastructure"))
+      res1<-ReLTER::get_site_info(deimsid = selected_site, category = c(#"Boundaries", 
+        "EnvCharacts", "Affiliations", "observedProperties", "RelateRes", "Infrastructure"))
       
+      res$tbl_generalInfo <- res1 %>% dplyr::select(title, uri, geoCoord, 
+                                                    envCharacteristics.geoBonBiome, envCharacteristics.biogeographicalRegion, 
+                                                    all_of(starts_with("geoElev.")),
+                                                    all_of(starts_with("envCharacteristics.airTemperature."))
+                                                    )
+                                                    
+                                                           
       
       res$val_title                 <- res1$title
       res$val_uri                   <- res1$uri
       res$wkt_coordinates           <- res1$geoCoord
       
-      res$sfc_boundariesPolygon     <- res1$boundaries
+      res$sfc_boundariesPolygon     <- NULL #res1$boundaries
       
       res$val_geoBonBiome           <- res1$envCharacteristics.geoBonBiome
       res$val_biogeographicalRegion <- res1$envCharacteristics.biogeographicalRegion
