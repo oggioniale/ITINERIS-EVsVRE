@@ -45,5 +45,5 @@ h4 {
 }
 
 thead, th.sorting_disabled {
-  visibility:hidden;
+  /*visibility:hidden;*/
 }

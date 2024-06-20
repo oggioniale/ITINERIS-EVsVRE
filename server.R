@@ -12,6 +12,25 @@ function(input, output, session) {
     site_info=NULL
   )
   
+  # Tables box ----
+  exampleTibble <- tibble::tibble(
+    title = c("titolo1", "titolo2", "titolo3"),
+    url = c("url1/doi1", "url2/doi2", "url3/doi3"),
+    resType = c("Zenodo", "Pangaea", "iNat")
+  )
+  datasets<-reactiveValues(
+    # per ora lascio esempi. Poi sono da mettere tutti a NULL
+    tblEVsData = exampleTibble,
+    tblOtherResData = exampleTibble,
+    tblOtherRepoData = exampleTibble |>
+      dplyr::select(
+        Title = title,
+        `Resource link` = url,
+        `Resource repo` = resType
+      )
+    
+  )
+  
   observeEvent(input$site, {
     message("ev site$ev:", input$site)
     status$selectedSite <- input$site
@@ -71,6 +90,9 @@ function(input, output, session) {
     shinybusy::show_modal_spinner(text="fetching data")
     #withProgress(message="fetching data", {
       x<-broker$getEv()
+      #datasets$tblEVsData <- 
+      datasets$tblOtherResData <- broker$getOtherResData()
+      datasets$tblOtherRepoData <- broker$getOtherRepoData()
     #})
     shinybusy::remove_modal_spinner()
       #browser()
@@ -81,16 +103,11 @@ function(input, output, session) {
     ))
   })
   
-  # Tables box ----
-  exampleTibble <- tibble::tibble(
-    title = c("titolo1", "titolo2", "titolo3"),
-    url = c("url1/doi1", "url2/doi2", "url3/doi3"),
-    resType = c("Zenodo", "Pangaea", "iNat")
-  )
+  
   output$tableEVsData <- DT::renderDataTable({
-    tblEVsData <- exampleTibble
+    #tblEVsData <- exampleTibble
     DT::datatable(
-      tblEVsData,
+      datasets$tblEVsData,
       escape = FALSE,
       caption = htmltools::tags$caption(
         style = 'caption-side: bottom; text-align: center;',
@@ -102,9 +119,9 @@ function(input, output, session) {
     )
   })
   output$tableOtherResData <- DT::renderDataTable({
-    tblOtherResData <- exampleTibble
+    #tblOtherResData <- exampleTibble
     DT::datatable(
-      tblOtherResData,
+      datasets$tblOtherResData,
       escape = FALSE,
       caption = htmltools::tags$caption(
         style = 'caption-side: bottom; text-align: center;',
@@ -116,14 +133,9 @@ function(input, output, session) {
     )
   })
   output$tableOtherRepoData <- DT::renderDataTable({
-    tblOtherRepoData <- exampleTibble |>
-      dplyr::select(
-        Title = title,
-        `Resource link` = url,
-        `Resource repo` = resType
-      )
+    #
     DT::datatable(
-      tblOtherRepoData,
+      datasets$tblOtherRepoData,
       escape = FALSE,
       caption = htmltools::tags$caption(
         style = 'caption-side: bottom; text-align: center;',

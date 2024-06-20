@@ -1,7 +1,11 @@
-require(dplyr)
-require(magrittr)
-require(ReLTER)
-require(rdflib)
+library(dplyr)
+library(magrittr)
+library(ReLTER)
+#require(rdflib)
+library(stringr)
+library(pangaear)
+library(sf)
+library(zen4R)
 
 #' Factory method to get a stateful controller (broker of data).
 #' @description The factory creates a
@@ -9,10 +13,10 @@ require(rdflib)
 #' 
 #' The object exposes the methods:
 #' 
-#' setSite: set selected site (via its deimsid. It must be present in the sites table)
+#' setSite: set selected site (via its deimsUUID. It must be present in the sites table)
 #' getSite: return the currently selected site record as a `tibble` with one row
 #
-#' siteList: return th named `list` of site deimsid, useful for selectizeInput in shiny UI
+#' siteList: return th named `list` of site deimsUUID, useful for selectizeInput in shiny UI
 #' EVsList: return the named `list` of (current site's) EV ids, useful for selectizeInput in shiny UI
 #
 #' siteNames: return a `character` array with the available site names
@@ -32,7 +36,7 @@ getBroker=function(){
   
   # declare internal vars
   {
-    #' deimsid (not the url)
+    #' deimsUUID (this is the UUID not the url)
     selected_site <- ""
     #' id of the EV as in the EVs tibble
     selected_ev <- ""
@@ -44,18 +48,18 @@ getBroker=function(){
     cacheInfoSite <- list()
   }
   
-  #' set selected site (via its deimsid. It must be present in the sites table)
-  setSite<-function(deimsid){
-    if(!deimsid %in% sites$deimsid) {
-      warning("Site must be specified by its deimsid")
+  #' set selected site (via its deimsUUID. It must be present in the sites table)
+  setSite<-function(deimsUUID){
+    if(!deimsUUID %in% sites$deimsUUID) {
+      warning("Site must be specified by its deimsUUID")
       return
     }
-    selected_site<<-deimsid
+    selected_site<<-deimsUUID
   }
   
   #' return the currently selected site record as a tibble with one row
   getSite<-function(){
-    sites %>% dplyr::filter(deimsid==selected_site)
+    sites %>% dplyr::filter(deimsUUID==selected_site)
   }
   
   #' get the available EVs for the currently selected site (they depend on the domain of the site)
@@ -81,9 +85,9 @@ getBroker=function(){
     EVs %>% dplyr::filter(id==selected_ev) 
   }
   
-  #' return th named list of site deimsid, useful for selectizeInput in shiny UI
+  #' return th named list of site deimsUUID, useful for selectizeInput in shiny UI
   siteList<-function(){
-    sites$deimsid %>% magrittr::set_names(sites$name)
+    sites$deimsUUID %>% magrittr::set_names(sites$name)
   }
   
   #' return the named list of (current site's) EV ids, useful for selectizeInput in shiny UI
@@ -99,8 +103,8 @@ getBroker=function(){
     # init internal vars
     sites <<- readRDS(sites,file = "static_data/Sites_list.RDS")
     EVs <<- readRDS(EVs,file = "static_data/EVs.RDS")
-    deimsid = "f30007c4-8a6e-4f11-ab87-569db54638fe"
-    setSite(deimsid)
+    deimsUUID = "f30007c4-8a6e-4f11-ab87-569db54638fe"
+    setSite(deimsUUID)
   }
   init()
   
@@ -163,7 +167,7 @@ getBroker=function(){
       #   - 
       # 
       res1 <- ReLTER::get_site_info(
-        deimsid = selected_site,
+        deimsid = paste0("https://deims.org/", selected_site),
         category = c(
           #"Boundaries", 
           "EnvCharacts",
@@ -219,7 +223,7 @@ getBroker=function(){
   
   # in parte questi possono essere direttamente quelli 
   ancillary_data<-function(){
-    info_site()$tbl_relatedResources
+    
   }
   
   keyword_data<-function(){return("TBD")}
@@ -281,27 +285,26 @@ getBroker=function(){
   # define self (what to export)
   }
   
-  self <- list(
-    "setSite"=setSite,
-    "getSite"=getSite,
-    "siteList"=siteList,
-    "siteNames"=sites$name,
-    "getCurrentEVs"=getCurrentSiteAvailableEVs,
-    "EVsList"=EVsList,
-    "evNames"=EVs$name,
-    "setEv"=setEv,
-    "getEv"=getEv,
-    "getInfo_Site"=info_site
-  )
-  
-  
-  self$getSelectedSiteDeimsid<-function(){
-    return(selected_site)
+  {
+  # get_site_bbx<-function(deimsUUID){
+  #   prep<-"https://deims.org/geoserver/deims/ows?service=WFS&version=2.0.0&request=GetFeature&typeName=deims:deims_sites_bboxes&srsName=EPSG:4326&outputFormat=application%2Fjson&CQL_FILTER=deimsid="
+  #   
+  #   #comp<-"https://deims.org/geoserver/deims/ows?service=WFS&version=2.0.0&request=GetFeature&typeName=deims:deims_sites_bboxes&srsName=EPSG:4326&outputFormat=application%2Fjson&CQL_FILTER=deimsid=%27https://deims.org/6869436a-80f4-4c6d-954b-a730b348d7ce%27"
+  #   url.geoserver<-paste0(prep, URLencode(paste0("'https://deims.org/", deimsUUID,"'")))
+  #   geoBoundaries <- geojsonsf::geojson_sf(url.geoserver)
+  #   plot(geoBoundaries)
+  #   return(geoBoundaries)
+  # }
   }
   
+  # https://deims.org/geoserver/deims/ows?service=WFS&version=2.0.0&request=GetFeature&typeName=deims:deims_sites_boundaries&srsName=EPSG:4326&CQL_FILTER=deimsid=%27https://deims.org/f30007c4-8a6e-4f11-ab87-569db54638fe%27&outputFormat=application%2Fjson
+  
+  # https://deims.org/geoserver/deims/ows?service=WFS&version=2.0.0&request=GetFeature&typeName=deims:deims_sites_bboxes&srsName=EPSG:4326&outputFormat=application%2Fjson&CQL_FILTER=deimsid=%27https://deims.org/6869436a-80f4-4c6d-954b-a730b348d7ce%27
   # Pangaea dataset ----
-  self$search_pangaea <- function() {
-    deimsid<-selected_site
+  search_pangaea <- function() {
+    deimsid<-paste0("https://deims.org/",selected_site)
+    #deimsid<-selected_site
+    #ReLTER::get_site_boundaries(deimsid)
     boundary <- ReLTER::get_site_info(
       deimsid,
       category = "Boundaries"
@@ -314,8 +317,72 @@ getBroker=function(){
         as.double()
     }
     pgRecords <- pangaear::pg_search(query = '*', bbox = c(bbox[1], bbox[2], bbox[3], bbox[4]))
+
     return(pgRecords)
   }
+  
+  search_zenodo <- function(){
+    # TODO: complete this method and add to getOtherRepoData
+    site_name <- getSite() %>% pull(alt_name)
+    # zen4R::ZenodoRequest$
+    
+  }
+  
+  # --------
+  getOtherRepoData<-function(){
+    
+    results_pangaea <- search_pangaea() %>% 
+      dplyr::mutate(url=sprintf("<a href='https://doi.org/%s' target='_blank'>%s<a>", doi, doi),
+                    resources = paste(size, size_measure),
+                    source="<a href='https://pangaea.de' target = '_blank'><img src='https://store.pangaea.de/documentation/PANGAEA-Wiki/Logo/PANGAEA_Logo_2.png' height='52'/></a>",
+                    title=citation,
+                    .keep="unused"
+                    ) %>%
+      dplyr::select(source, url, title, resources)
+    
+    # TODO: complete decoding the resources types in DEIMS SDR.
+    # TODO: create png for sources from their original images, in order not to request them too many time.
+    resultsDEIMS <- info_site()$tbl_relatedResources %>%
+      dplyr::mutate(title=relatedResourcesTitle,
+                    url=sprintf("<a href='https://doi.org/%s' target='_blank'>%s<a>", uri, uri),
+                    source="<a href='https://deims.org/' target = '_blank'><img src='https://elter-ri.eu/storage/app/uploads/public/637/61a/13d/63761a13d4ca2866772974.svg' height='52'/></a>",
+                    resources = case_when(stringr::str_detect(uri, stringr::fixed("dataset")) ~ "dataset",
+                                          stringr::str_detect(uri, stringr::fixed("sensor")) ~ "sensor",
+                                          TRUE ~ "other"),
+                    .keep="unused") %>%
+      dplyr::select(source, url, title, resources)
+    
+    # TODO: add other sources (e.g. zeonodo) following the same pattern
+    
+    # TODO: complete the following with other sources eg. Zenodo etc.
+    # NOTE: Columns must be source, url, resources, title
+    results <- resultsDEIMS %>% 
+      dplyr::add_row(results_pangaea)
+
+    return(results)
+  }
+  
+  self <- list(
+    "setSite"=setSite,
+    "getSite"=getSite,
+    "siteList"=siteList,
+    "siteNames"=sites$name,
+    "getCurrentEVs"=getCurrentSiteAvailableEVs,
+    "EVsList"=EVsList,
+    "evNames"=EVs$name,
+    "setEv"=setEv,
+    "getEv"=getEv,
+    "getInfo_Site"=info_site,
+    "getOtherResData"=ancillary_data,
+    "getOtherRepoData"=getOtherRepoData
+  )
+  
+  
+  # self$getSelectedSiteDeimsid<-function(){
+  #   return(selected_site)
+  # }
+  
+  
   
   
   print("broker.R: finished preparation")
@@ -326,8 +393,8 @@ getBroker=function(){
 # example usage
 if(FALSE){
   b <- getBroker()
-  deimsid = "f30007c4-8a6e-4f11-ab87-569db54638fe"
-  b$setSite(deimsid)
+  deimsUUID = "f30007c4-8a6e-4f11-ab87-569db54638fe"
+  b$setSite(deimsUUID)
   b$getSite()
   b$getInfo_Site() # the first call for a given site takes more time, result is then cached and quickly accessible
   
@@ -340,6 +407,9 @@ if(FALSE){
   b$setEv(b$getCurrentEVs()$id[1]) # select the first available EV for the selected site
   b$getSite()
   b$getEv()
+  
+  # alt name of site
+  b$getSite() %>% dplyr::pull(alt_name)
   
 }
 #
