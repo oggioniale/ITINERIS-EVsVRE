@@ -230,12 +230,14 @@ getBroker = function() {
   
   # searches OtherResData ----
   # GBIF
-  
+  # ReLTER::get_site_speciesOccurrences(
+  #   deimsid = paste0("https://deims.org/",selected_site)
+  # )
   # iNat
   
   # OBIS (only if the site is marine)
   
-  # other Mica dataset
+  # other Mica's datasets
   
   # results OtherResData ----
   getOtherResData <- function() {
@@ -318,7 +320,7 @@ getBroker = function() {
   # searches OtherRepoData ----
   # Pangaea dataset ----
   search_pangaea <- function() {
-    deimsid<-paste0("https://deims.org/",selected_site)
+    deimsid <- paste0("https://deims.org/", selected_site)
     #deimsid<-selected_site
     #ReLTER::get_site_boundaries(deimsid)
     boundary <- ReLTER::get_site_info(
@@ -332,7 +334,10 @@ getBroker = function() {
       bbox <- sf::st_bbox(boundary) %>%
         as.double()
     }
-    pgRecords <- pangaear::pg_search(query = '*', bbox = c(bbox[1], bbox[2], bbox[3], bbox[4]))
+    pgRecords <- pangaear::pg_search(
+      query = '*',
+      bbox = c(bbox[1], bbox[2], bbox[3], bbox[4])
+    )
 
     return(pgRecords)
   }
@@ -341,7 +346,6 @@ getBroker = function() {
     site_name <- getSite() %>% pull(alt_name)
     zenodo <- zen4R::ZenodoManager$new(
       url = "https://zenodo.org/api",
-      # token = mytoken,
       logger = "INFO"
     )
     zenodo_records <- zenodo$getRecords(
@@ -354,8 +358,8 @@ getBroker = function() {
       lapply(function(n) {
         tibble::tibble(
           title = n$metadata$title,
-          uri = n$doi,
-          resources = n$metadata$resource_type$type
+          uri = n$pids$doi$identifier,
+          resources = n$metadata$resource_type$id
         )
       }) %>%
       dplyr::bind_rows()
@@ -365,11 +369,11 @@ getBroker = function() {
     resultsPangaea <- search_pangaea() %>% 
       dplyr::mutate(
         url = sprintf("<a href='https://doi.org/%s' target='_blank'>%s<a>", doi, doi),
-                    resources = paste(size, size_measure),
-                    source="<a href='https://pangaea.de' target = '_blank'><img src='https://store.pangaea.de/documentation/PANGAEA-Wiki/Logo/PANGAEA_Logo_2.png' height='52'/></a>",
-                    title=citation,
-                    .keep="unused"
-                    ) %>%
+          resources = paste(size, size_measure),
+          source="<a href='https://pangaea.de' target = '_blank'><img src='https://store.pangaea.de/documentation/PANGAEA-Wiki/Logo/PANGAEA_Logo_2.png' height='52'/></a>",
+          title=citation,
+          .keep="unused"
+        ) %>%
       dplyr::select(source, url, title, resources)
     
     # TODO: complete decoding the resources types in DEIMS SDR.
