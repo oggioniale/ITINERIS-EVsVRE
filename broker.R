@@ -324,15 +324,34 @@ getBroker=function(){
   search_zenodo <- function(){
     # TODO: complete this method and add to getOtherRepoData
     site_name <- getSite() %>% pull(alt_name)
-    # zen4R::ZenodoRequest$
-    
+    zenodo <- zen4R::ZenodoManager$new(
+      url = "https://zenodo.org/api",
+      # token = mytoken,
+      logger = "INFO"
+    )
+    zenodo_records <- zenodo$getRecords(
+      q = URLencode(
+        sprintf('title:"%s" description:"%s"', site_name, site_name)
+      ),
+      size = 10
+    )
+    records <- zenodo_records %<>% 
+      lapply(function(n) {
+        tibble::tibble(
+          title = n$metadata$title,
+          uri = n$doi,
+          resources = n$metadata$resource_type$type
+        )
+      }) %>%
+      dplyr::bind_rows()
   }
   
   # --------
   getOtherRepoData<-function(){
     
-    results_pangaea <- search_pangaea() %>% 
-      dplyr::mutate(url=sprintf("<a href='https://doi.org/%s' target='_blank'>%s<a>", doi, doi),
+    resultsPangaea <- search_pangaea() %>% 
+      dplyr::mutate(
+        url = sprintf("<a href='https://doi.org/%s' target='_blank'>%s<a>", doi, doi),
                     resources = paste(size, size_measure),
                     source="<a href='https://pangaea.de' target = '_blank'><img src='https://store.pangaea.de/documentation/PANGAEA-Wiki/Logo/PANGAEA_Logo_2.png' height='52'/></a>",
                     title=citation,
@@ -343,21 +362,35 @@ getBroker=function(){
     # TODO: complete decoding the resources types in DEIMS SDR.
     # TODO: create png for sources from their original images, in order not to request them too many time.
     resultsDEIMS <- info_site()$tbl_relatedResources %>%
-      dplyr::mutate(title=relatedResourcesTitle,
-                    url=sprintf("<a href='https://doi.org/%s' target='_blank'>%s<a>", uri, uri),
-                    source="<a href='https://deims.org/' target = '_blank'><img src='https://elter-ri.eu/storage/app/uploads/public/637/61a/13d/63761a13d4ca2866772974.svg' height='52'/></a>",
-                    resources = case_when(stringr::str_detect(uri, stringr::fixed("dataset")) ~ "dataset",
-                                          stringr::str_detect(uri, stringr::fixed("sensor")) ~ "sensor",
-                                          TRUE ~ "other"),
-                    .keep="unused") %>%
+      dplyr::mutate(
+        title = relatedResourcesTitle,
+        url = sprintf("<a href='https://doi.org/%s' target='_blank'>%s<a>", uri, uri),
+        source = "<a href='https://deims.org/' target = '_blank'><img src='https://elter-ri.eu/storage/app/uploads/public/637/61a/13d/63761a13d4ca2866772974.svg' height='52'/></a>",
+        resources = case_when(
+          stringr::str_detect(uri, stringr::fixed("dataset")) ~ "dataset",
+          stringr::str_detect(uri, stringr::fixed("sensor")) ~ "sensor",
+          TRUE ~ "other"
+        ),
+        .keep="unused"
+      ) %>%
       dplyr::select(source, url, title, resources)
     
-    # TODO: add other sources (e.g. zeonodo) following the same pattern
+    # TODO: add other sources (e.g. Zenodo) following the same pattern
+    resultsZenodo <- search_zenodo() %>%
+      dplyr::mutate(
+        title = title,
+        url = sprintf("<a href='https://doi.org/%s' target='_blank'>%s<a>", uri, uri),
+        source = "<a href='https://zenodo.org/' target = '_blank'><img src='https://about.zenodo.org/static/img/logos/zenodo-gradient-200.png' height='52'/></a>",
+        resources = resources,
+        .keep="unused"
+      ) %>%
+      dplyr::select(source, url, title, resources)
     
-    # TODO: complete the following with other sources eg. Zenodo etc.
+    # TODO: complete the following with other sources e.g. Zenodo etc.
     # NOTE: Columns must be source, url, resources, title
     results <- resultsDEIMS %>% 
-      dplyr::add_row(results_pangaea)
+      dplyr::add_row(resultsPangaea) %>%
+      dplyr::add_row(resultsZenodo)
 
     return(results)
   }
