@@ -103,6 +103,32 @@ function(input, output, session) {
     ))
   })
   
+  # set the numbers in infoboxes
+  observeEvent(datasets$tblOtherRepoData,{
+    
+  })
+  
+  #infoBox("Numero di dataset che contribuiscono alla EV selezionata", , icon = icon("credit-card")),
+  #infoBox("Numero di dataset accessori", 2, icon = icon("credit-card")),
+  #infoBox("Numero di dataset che rispondono alle parole chiave nome sito e variabile in repo quali: DEIMS, Zenodo, Pangea, B2Share", 7, icon = icon("credit-card")),
+  
+  output$info_box_EVsData <- renderUI({
+    infoBox("Numero di dataset che contribuiscono alla EV selezionata", 
+            nrow(datasets$tblEVsData), 
+            icon = icon("credit-card"))
+  })
+  
+  output$info_box_OtherResData <- renderUI({
+    infoBox("Numero di dataset accessori", 
+            nrow(datasets$tblOtherResData), 
+            icon = icon("credit-card"))
+  })
+  
+  output$info_box_OtherRepoData <- renderUI({
+    infoBox("Numero di dataset che rispondono alle parole chiave nome sito (e variabile) in altri repo",
+            nrow(datasets$tblOtherRepoData), 
+            icon = icon("credit-card"))
+  })
   
   output$tableEVsData <- DT::renderDataTable({
     #tblEVsData <- exampleTibble
