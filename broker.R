@@ -30,9 +30,10 @@ library(zen4R)
 #' 
 #' @return the controller object
 #' @author Paolo Tagliolato (ptagliolato)
+#' @author Alessandro Oggioni (oggioniale)
 #' 
-getBroker=function(){
-  self=list()
+getBroker = function() {
+  self = list()
   
   # declare internal vars
   {
@@ -49,30 +50,35 @@ getBroker=function(){
   }
   
   #' set selected site (via its deimsUUID. It must be present in the sites table)
-  setSite<-function(deimsUUID){
+  setSite <- function(deimsUUID) {
     if(!deimsUUID %in% sites$deimsUUID) {
       warning("Site must be specified by its deimsUUID")
       return
     }
-    selected_site<<-deimsUUID
+    selected_site <<- deimsUUID
   }
   
   #' return the currently selected site record as a tibble with one row
-  getSite<-function(){
-    sites %>% dplyr::filter(deimsUUID==selected_site)
+  getSite <- function() {
+    sites %>%
+      dplyr::filter(deimsUUID == selected_site)
   }
   
   #' get the available EVs for the currently selected site (they depend on the domain of the site)
-  getCurrentSiteAvailableEVs<-function(){
+  getCurrentSiteAvailableEVs <- function(){
     suppressMessages(
-    ll<-EVs %>% dplyr::inner_join(getSite() %>% dplyr::select(domain))
+      ll <- EVs %>%
+        dplyr::inner_join(
+          getSite() %>%
+            dplyr::select(domain)
+        )
     )
-    if(length(ll)==0) return("")
+    if (length(ll)==0) return("")
     ll
   }
   
   #' Set the selected EV. Warn if the `id` is not present in the `EVs` object
-  setEv<-function(id){
+  setEv <- function(id){
     if(!id %in% getCurrentSiteAvailableEVs()$id) {
       warning("EV must be specified by its id and must be available for the current site")
       return
@@ -81,25 +87,34 @@ getBroker=function(){
   }
   
   #' return the currently selected EV record as a tibble with one row
-  getEv<-function(){
-    EVs %>% dplyr::filter(id==selected_ev) 
+  getEv <- function() {
+    EVs %>%
+      dplyr::filter(
+        id == selected_ev
+      ) 
   }
   
   #' return th named list of site deimsUUID, useful for selectizeInput in shiny UI
-  siteList<-function(){
-    sites$deimsUUID %>% magrittr::set_names(sites$name)
+  siteList <- function() {
+    sites$deimsUUID %>%
+      magrittr::set_names(
+        sites$name
+      )
   }
   
   #' return the named list of (current site's) EV ids, useful for selectizeInput in shiny UI
-  EVsList<-function(){
-    curev<-getCurrentSiteAvailableEVs() %>% 
-      dplyr::mutate(label=sprintf("%s (%s) - %s", name, type, domain))
-    ll<-curev$id %>% magrittr::set_names(curev$label)
+  EVsList <- function() {
+    curev <- getCurrentSiteAvailableEVs() %>% 
+      dplyr::mutate(
+        label = sprintf("%s (%s) - %s", name, type, domain)
+      )
+    ll <- curev$id %>%
+      magrittr::set_names(curev$label)
     append(list("<select one>"=""),ll)
   }
   
   
-  init<-function(){
+  init <- function() {
     # init internal vars
     sites <<- readRDS(sites,file = "static_data/Sites_list.RDS")
     EVs <<- readRDS(EVs,file = "static_data/EVs.RDS")
@@ -151,9 +166,9 @@ getBroker=function(){
   #'  tbl_relatedResources 
   #'  tbl_dataPolicyRights
   #'  
-  info_site<-function(){
-    if(is.null(cacheInfoSite[[selected_site]])){
-      res<-list()
+  info_site <- function() {
+    if(is.null(cacheInfoSite[[selected_site]])) {
+      res <- list()
       # presentare:
       # nome sito (linkabile)
       # elevation (min, mean, max) per es. con sliders? Altrimenti un plot su scala fissa con tre punti o un boxplot
@@ -184,18 +199,12 @@ getBroker=function(){
           #all_of(starts_with("geoElev.")),
           #all_of(starts_with("airTemperature."))
         )
-                                                    
-                                                           
-      
       res$val_title                 <- res1$title
       res$val_uri                   <- res1$uri
       res$wkt_coordinates           <- res1$geoCoord
-      
       # res$sfc_boundariesPolygon     <- NULL #res1$boundaries
-      
       # res$val_geoBonBiome           <- res1$geoBonBiome
       # res$val_biogeographicalRegion <- res1$biogeographicalRegion
-      
       # elevunit<-units::as_units("m") # elev unit in deims is msl, not recognized by udunits
       # res$stats3num_elevation    <- units::set_units(c(min  = res1$geoElev.min, 
       #                                                  mean = res1$geoElev.avg, 
@@ -205,32 +214,37 @@ getBroker=function(){
       #                                        res1$airTemperature.unit, mode = "standard")
       # res$val_precipitation      <- units::set_units(res1$precipitation.yearlyAverage, 
       #                                     res1$precipitation.unit,mode = "standard")
-      
       # tables
       res$tbl_eunisHabitats      <- res1$eunisHabitat[[1]] %>% as_tibble() %>% dplyr::select(-uri)
       # res$tbl_observedProperties <- res1$observedProperties[[1]] %>% as_tibble()
       res$tbl_relatedResources   <- res1$relatedResources[[1]] %>% as_tibble()
       # res$tbl_dataPolicyRights   <- res1$generalInfo.data.policy.rights[[1]] %>% as_tibble()
-      
       cacheInfoSite[[selected_site]] <<- res
     }
     return(cacheInfoSite[[selected_site]])
   }
   
-  info_ev<-function(){
+  info_ev <- function() {
     
   }
   
-  # in parte questi possono essere direttamente quelli 
-  ancillary_data<-function(){
+  # searches OtherResData ----
+  # GBIF
+  
+  # iNat
+  
+  # OBIS (only if the site is marine)
+  
+  # other Mica dataset
+  
+  # results OtherResData ----
+  getOtherResData <- function() {
     
   }
   
-  keyword_data<-function(){return("TBD")}
-  
-  # zenodo
-  # https://zenodo.org/communities/lter-italy/records?q=lake%20maggiore&l=list&p=1&s=10&sort=bestmatch
-  
+  keyword_data <- function() {
+    return("TBD")
+  }
   
   # # TODO: check this if useful
   {
@@ -300,6 +314,8 @@ getBroker=function(){
   # https://deims.org/geoserver/deims/ows?service=WFS&version=2.0.0&request=GetFeature&typeName=deims:deims_sites_boundaries&srsName=EPSG:4326&CQL_FILTER=deimsid=%27https://deims.org/f30007c4-8a6e-4f11-ab87-569db54638fe%27&outputFormat=application%2Fjson
   
   # https://deims.org/geoserver/deims/ows?service=WFS&version=2.0.0&request=GetFeature&typeName=deims:deims_sites_bboxes&srsName=EPSG:4326&outputFormat=application%2Fjson&CQL_FILTER=deimsid=%27https://deims.org/6869436a-80f4-4c6d-954b-a730b348d7ce%27
+  
+  # searches OtherRepoData ----
   # Pangaea dataset ----
   search_pangaea <- function() {
     deimsid<-paste0("https://deims.org/",selected_site)
@@ -320,9 +336,8 @@ getBroker=function(){
 
     return(pgRecords)
   }
-  
-  search_zenodo <- function(){
-    # TODO: complete this method and add to getOtherRepoData
+  # Zenodo dataset ----
+  search_zenodo <- function() {
     site_name <- getSite() %>% pull(alt_name)
     zenodo <- zen4R::ZenodoManager$new(
       url = "https://zenodo.org/api",
@@ -345,10 +360,8 @@ getBroker=function(){
       }) %>%
       dplyr::bind_rows()
   }
-  
-  # --------
-  getOtherRepoData<-function(){
-    
+  # results OtherRepoData
+  getOtherRepoData <- function() {
     resultsPangaea <- search_pangaea() %>% 
       dplyr::mutate(
         url = sprintf("<a href='https://doi.org/%s' target='_blank'>%s<a>", doi, doi),
@@ -375,7 +388,7 @@ getBroker=function(){
       ) %>%
       dplyr::select(source, url, title, resources)
     
-    # TODO: add other sources (e.g. Zenodo) following the same pattern
+    # TODO: filter only dataset tip. Query for elasticsearch is "q = resource_type.type:dataset"
     resultsZenodo <- search_zenodo() %>%
       dplyr::mutate(
         title = title,
@@ -386,8 +399,10 @@ getBroker=function(){
       ) %>%
       dplyr::select(source, url, title, resources)
     
-    # TODO: complete the following with other sources e.g. Zenodo etc.
+    # TODO: complete the following with other sources e.g. ??? etc.
+    
     # NOTE: Columns must be source, url, resources, title
+    # TODO: transform source columns as factor example: vinili$`Collection Media Condition` = factor(vinili$`Collection Media Condition`, labels = c("Mint (M)", "Near Mint (NM or M-)"))
     results <- resultsDEIMS %>% 
       dplyr::add_row(resultsPangaea) %>%
       dplyr::add_row(resultsZenodo)
@@ -396,18 +411,18 @@ getBroker=function(){
   }
   
   self <- list(
-    "setSite"=setSite,
-    "getSite"=getSite,
-    "siteList"=siteList,
-    "siteNames"=sites$name,
-    "getCurrentEVs"=getCurrentSiteAvailableEVs,
-    "EVsList"=EVsList,
-    "evNames"=EVs$name,
-    "setEv"=setEv,
-    "getEv"=getEv,
-    "getInfo_Site"=info_site,
-    "getOtherResData"=ancillary_data,
-    "getOtherRepoData"=getOtherRepoData
+    "setSite" = setSite,
+    "getSite" = getSite,
+    "siteList" = siteList,
+    "siteNames" = sites$name,
+    "getCurrentEVs" = getCurrentSiteAvailableEVs,
+    "EVsList" = EVsList,
+    "evNames" = EVs$name,
+    "setEv" = setEv,
+    "getEv" = getEv,
+    "getInfo_Site" = info_site,
+    "getOtherResData" = getOtherResData,
+    "getOtherRepoData" = getOtherRepoData
   )
   
   

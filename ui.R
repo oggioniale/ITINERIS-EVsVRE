@@ -128,7 +128,7 @@ fluidPage(
               DT::dataTableOutput("tableEVsData"),
               DT::dataTableOutput("tableOtherResData"),
               DT::dataTableOutput("tableOtherRepoData"),
-              "Inserire: 3. tabella con dataset(s) riferiti alla EV selezionata, dataset(s) accessori (es. iNat, GBIF, ecc.) e dataset che sono presenti in repo non strutturati (es. DEIMS, Zenodo, Pangea, B2Share) i campi di questa tabella dovrabbero essere titolo dataset, sorgente, PID. Infine solo i dataset(s) che possono essere visibili nel pannello sottostante dovrebbero essere cliccabili."
+              "Inserire: tabelle con dataset(s) riferiti alla:\nA. EV selezionata,\n B. dataset(s) accessori (es. iNat, GBIF, ecc.) e\nC. dataset che sono presenti in repo non strutturati (es. DEIMS, Zenodo, Pangea, B2Share).\nSolo i dataset(s) della tabella A e della tabella B possono essere visualizzati nelle tre forme nel box sottostante.\nDovrebbe essere fatto un pulsante in corrispondenza di ogni singola riga nelle 3 tabelle dal quale poter scaricare i singoli datast nell'ambiente del laboratorio virtuale."
             )
           ),
           fluidRow(

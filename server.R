@@ -133,14 +133,14 @@ function(input, output, session) {
     )
   })
   output$tableOtherRepoData <- DT::renderDataTable({
-    #
     DT::datatable(
       datasets$tblOtherRepoData,
       escape = FALSE,
       caption = htmltools::tags$caption(
-        style = 'caption-side: bottom; text-align: center;',
-        'Tabella - ', htmltools::em(paste0(
-          'caption text'
+        style = 'text-align: center;',
+        htmltools::hr(),
+        htmltools::h3(paste0(
+          'Contains resources related with site selected and collected from DEIMS-SDR, Pangaea, and Zenodo'
         ))
       ),
       filter = 'top'
