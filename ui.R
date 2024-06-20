@@ -125,12 +125,22 @@ fluidPage(
               uiOutput("info_box_EVsData"),
               uiOutput("info_box_OtherResData"),
               uiOutput("info_box_OtherRepoData"),
-              #infoBox("Numero di dataset che contribuiscono alla EV selezionata", , icon = icon("credit-card")),
-              #infoBox("Numero di dataset accessori", 2, icon = icon("credit-card")),
-              #infoBox("Numero di dataset che rispondono alle parole chiave nome sito e variabile in repo quali: DEIMS, Zenodo, Pangea, B2Share", 7, icon = icon("credit-card")),
-              DT::dataTableOutput("tableEVsData"),
-              DT::dataTableOutput("tableOtherResData"),
-              DT::dataTableOutput("tableOtherRepoData"),
+              tabBox(
+                width = 12,
+                selected = "EVsData",
+                tabPanel(
+                  "EVsData",
+                  DT::dataTableOutput("tableEVsData")
+                ),
+                tabPanel(
+                  "OtherResData",
+                  DT::dataTableOutput("tableOtherResData")
+                ),
+                tabPanel(
+                  "OtherRepoData",
+                  DT::dataTableOutput("tableOtherRepoData")
+                )
+              ),
               "Inserire: tabelle con dataset(s) riferiti alla:\nA. EV selezionata,\n B. dataset(s) accessori (es. iNat, GBIF, ecc.) e\nC. dataset che sono presenti in repo non strutturati (es. DEIMS, Zenodo, Pangea, B2Share).\nSolo i dataset(s) della tabella A e della tabella B possono essere visualizzati nelle tre forme nel box sottostante.\nDovrebbe essere fatto un pulsante in corrispondenza di ogni singola riga nelle 3 tabelle dal quale poter scaricare i singoli datast nell'ambiente del laboratorio virtuale."
             )
           ),

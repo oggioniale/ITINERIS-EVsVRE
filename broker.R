@@ -230,18 +230,82 @@ getBroker = function() {
   
   # searches OtherResData ----
   # GBIF
-  # ReLTER::get_site_speciesOccurrences(
-  #   deimsid = paste0("https://deims.org/",selected_site)
-  # )
+  search_gbif <- function() {
+    occ <- ReLTER::get_site_speciesOccurrences(
+      deimsid = paste0("https://deims.org/", selected_site),
+      list_DS = "gbif",
+      exclude_inat_from_gbif = TRUE,
+      show_map = FALSE,
+      limit = 500
+    )
+    occ <- occ$gbif
+  }
   # iNat
-  
-  # OBIS (only if the site is marine)
-  
+  search_inat <- function() {
+    occ <- ReLTER::get_site_speciesOccurrences(
+      deimsid = paste0("https://deims.org/", selected_site),
+      list_DS = "inat",
+      show_map = FALSE,
+      limit = 500
+    )
+    occ <- occ$inat
+  }
+  # OBIS
+  search_obis <- function() {
+    occ <- ReLTER::get_site_speciesOccurrences(
+      deimsid = paste0("https://deims.org/", selected_site),
+      list_DS = "obis",
+      show_map = FALSE,
+      limit = 500
+    )
+    occ <- occ$obis
+  }
   # other Mica's datasets
+  # TODO: ...
   
   # results OtherResData ----
   getOtherResData <- function() {
+    gbif_occ <- nrow(search_gbif())
+    gbif_uri <- search_gbif() %>%
+      dplyr::select(datasetKey) %>%
+      `st_geometry<-`(., NULL) %>%
+      unique()
+    resultsGBIF <- tibble::tibble(
+      source = "<a href='https://gbif.org/' target = '_blank'><img src='https://www.gbif.no/services/logo/gbif-dot-org.png' height='52'/></a>",
+      url = sprintf("<a href='https://www.gbif.org/dataset/%s' target='_blank'>https://www.gbif.org/dataset/%s<a>", gbif_uri, gbif_uri),
+      title = "Species occurrences in the area surrounding the site",
+      resources = paste("more than", gbif_occ, "specie occurrences")
+    )
     
+    # resultsINat
+    inat_occ <- nrow(search_inat())
+    site_name <- getSite() %>% pull(name) %>% stringr::str_replace(pattern = " ", replacement = "-") %>% stringr::str_to_lower()
+    resultsINat <- tibble::tibble(
+      source = "<a href='https://www.inaturalist.org' target = '_blank'><img src='https://static.inaturalist.org/sites/1-logo_square.png' height='52'/></a>",
+      url = paste0(
+        "<a href='https://www.inaturalist.org/projects/lter-site-",
+        site_name, "' target = '_blank'>",
+        "https://www.inaturalist.org/projects/lter-site-", site_name,
+        "</a>"
+      ),
+      title = "Species occurrences in the area surrounding the site",
+      resources = paste("more than", inat_occ, "specie occurrences")
+    )
+    
+    # resultsOBIS
+    obis_occ <- nrow(search_obis())
+    resultsOBIS <- tibble::tibble(
+      source = "<a href='https://obis.org' target = '_blank'><img src='https://classroom.oceanteacher.org/pluginfile.php/43689/course/overviewfiles/obis-logo-moodle.png' height='52'/></a>",
+      url = paste0("-"),
+      title = "Species occurrences in the area surrounding the site",
+      resources = paste("more than", inat_occ, "specie occurrences")
+    )
+    
+    results <- resultsGBIF %>% 
+      dplyr::add_row(resultsINat) %>%
+      dplyr::add_row(resultsOBIS)
+    
+    return(results)
   }
   
   keyword_data <- function() {
