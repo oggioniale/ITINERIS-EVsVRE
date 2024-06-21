@@ -9,7 +9,7 @@ function(input, output, session) {
   status <- reactiveValues(
     selectedSite = '',
     selectedEv = NULL,
-    site_info=NULL
+    site_info = NULL
   )
   
   # Tables box ----
@@ -18,7 +18,7 @@ function(input, output, session) {
     url = c("url1/doi1", "url2/doi2", "url3/doi3"),
     resType = c("Zenodo", "Pangaea", "iNat")
   )
-  datasets<-reactiveValues(
+  datasets <- reactiveValues(
     # per ora lascio esempi. Poi sono da mettere tutti a NULL
     tblEVsData = exampleTibble,
     tblOtherResData = exampleTibble,
@@ -104,58 +104,87 @@ function(input, output, session) {
   })
   
   # set the numbers in infoboxes
-  observeEvent(datasets$tblOtherRepoData,{
+  observeEvent(datasets$tblOtherRepoData, {
     
   })
   
-  #infoBox("Numero di dataset che contribuiscono alla EV selezionata", , icon = icon("credit-card")),
-  #infoBox("Numero di dataset accessori", 2, icon = icon("credit-card")),
-  #infoBox("Numero di dataset che rispondono alle parole chiave nome sito e variabile in repo quali: DEIMS, Zenodo, Pangea, B2Share", 7, icon = icon("credit-card")),
-  
   output$info_box_EVsData <- renderUI({
-    infoBox("Numero di dataset che contribuiscono alla EV selezionata", 
-            nrow(datasets$tblEVsData), 
-            icon = icon("credit-card"))
+    infoBox(
+      "Numero di dataset che contribuiscono alla EV selezionata", 
+      nrow(datasets$tblEVsData), 
+      icon = icon("table"),
+      color = "olive"
+    )
   })
-  
   output$info_box_OtherResData <- renderUI({
-    infoBox("Numero di dataset accessori", 
-            nrow(datasets$tblOtherResData), 
-            icon = icon("credit-card"))
+    infoBox(
+      "Numero di dataset accessori",
+      nrow(datasets$tblOtherResData), 
+      icon = icon("table"),
+      color = "olive"
+    )
   })
-  
   output$info_box_OtherRepoData <- renderUI({
-    infoBox("Numero di dataset che rispondono alle parole chiave nome sito (e variabile) in altri repo",
-            nrow(datasets$tblOtherRepoData), 
-            icon = icon("credit-card"))
+    infoBox(
+      "Numero di dataset che rispondono alle parole chiave nome sito (e variabile) in altri repo",
+      nrow(datasets$tblOtherRepoData), 
+      icon = icon("table"),
+      color = "olive"
+    )
   })
   
   output$tableEVsData <- DT::renderDataTable({
-    #tblEVsData <- exampleTibble
     DT::datatable(
       datasets$tblEVsData,
       escape = FALSE,
       caption = htmltools::tags$caption(
-        style = 'caption-side: bottom; text-align: center;',
-        'Tabella - ', htmltools::em(paste0(
-          'caption text'
+        style = 'text-align: center;',
+        htmltools::h3(paste0(
+          'Contains resources related with selected EV and site'
         ))
       ),
-      filter = 'top'
+      filter = 'top',
+      extensions = 'Buttons',
+      options = list(
+        dom = 'Bfrtip',
+        buttons = list(
+          "copy",
+          list(
+            extend = "collection",
+            text = 'Use selected dataset in my VRE session',
+            action = DT::JS("function ( e, dt, node, config ) {
+                                    alert( 'Button activated' );
+                                }")
+          )
+        )
+      )
     )
   })
   output$tableOtherResData <- DT::renderDataTable({
-    #tblOtherResData <- exampleTibble
     DT::datatable(
       datasets$tblOtherResData,
       escape = FALSE,
       caption = htmltools::tags$caption(
-        style = 'caption-side: bottom; text-align: center;',
-        'Tabella - ', htmltools::em(paste0(
-          'caption text'
+        style = 'text-align: center;',
+        htmltools::h3(paste0(
+          'Contains resources related with selected site and collected from GBIF, iNaturalist, and OBIS'
         ))
       ),
-      filter = 'top'
+      filter = 'top',
+      extensions = 'Buttons',
+      options = list(
+        dom = 'Bfrtip',
+        buttons = list(
+          # "copy",
+          list(
+            extend = "collection",
+            text = 'Use selected dataset in my VRE session',
+            action = DT::JS("function ( e, dt, node, config ) {
+                                    alert( 'Button activated' );
+                                }")
+          )
+        )
+      )
     )
   })
   output$tableOtherRepoData <- DT::renderDataTable({
@@ -164,12 +193,49 @@ function(input, output, session) {
       escape = FALSE,
       caption = htmltools::tags$caption(
         style = 'text-align: center;',
-        htmltools::hr(),
         htmltools::h3(paste0(
-          'Contains resources related with site selected and collected from DEIMS-SDR, Pangaea, and Zenodo'
+          'Contains resources related with selected site and collected from DEIMS-SDR, Pangaea, and Zenodo'
         ))
       ),
-      filter = 'top'
+      filter = 'top',
+      extensions = 'Buttons',
+      options = list(
+        dom = 'Bfrtip',
+        buttons = list(
+          # "copy",
+          list(
+            extend = "collection",
+            text = 'Use selected dataset in my VRE session',
+            action = DT::JS("function ( e, dt, node, config ) {
+                                    alert( 'Button activated' );
+                                }")
+          )
+        )
+      )
     )
   })
+  
+  # Visualization box ----
+  occ <- ReLTER::get_site_speciesOccurrences(
+    deimsid = paste0("https://deims.org/", selected_site),
+    list_DS = "gbif",
+    exclude_inat_from_gbif = TRUE,
+    show_map = FALSE,
+    limit = 500
+  )
+  shared_data <- SharedData$new(occ$gbif) 
+  output$map <- leaflet::renderLeaflet({
+    leaflet::leaflet(shared_data) |>
+      leaflet::addProviderTiles(
+        "CartoDB.Positron",
+        options = leaflet::providerTileOptions(opacity = 0.99)) |>
+      leaflet::addMarkers()
+  })
+  output$tbl <- DT::renderDT({
+    DT::datatable(
+      shared_data,
+      escape = FALSE,
+      filter = 'top'
+    )
+  }, server = FALSE)
 }

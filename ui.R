@@ -80,7 +80,7 @@ fluidPage(
           fluidRow(
             box( # site info
               width = 6,
-              title = "Site", 
+              title = "eLTER site", 
               closable = FALSE, 
               status = "info", 
               solidHeader = FALSE, 
@@ -89,7 +89,7 @@ fluidPage(
               selectizeInput(
                 #selectInput(
                 inputId = "site",
-                label = "Select an eLTER site",
+                label = HTML("select site"),
                 multiple = FALSE,
                 choices = broker$siteList(),
                 selected = NULL
@@ -98,16 +98,15 @@ fluidPage(
             ),
             box( # EV info
               width = 6,
-              title = "EV", 
+              title = "Essential Variable (EV)", 
               closable = FALSE, 
               status = "info", 
               solidHeader = FALSE, 
               collapsible = TRUE,
               enable_sidebar = TRUE,
               selectizeInput(
-                #selectInput(
                 inputId = "ev",
-                label = HTML("Select an EV"), 
+                label = HTML("select EV"),
                 multiple = FALSE,
                 choices = broker$EVsList(),
                 selected = ""
@@ -158,9 +157,18 @@ fluidPage(
                 # side = "right",
                 # height = "250px",
                 selected = "Map",
-                tabPanel("Map", "Tab content 1"),
-                tabPanel("Table", "Tab content 2"),
-                tabPanel("Chart", "Note that when side=right, the tab order is reversed.")
+                tabPanel(
+                  "Map",
+                  leaflet::leafletOutput("map")
+                ),
+                tabPanel(
+                  "Table",
+                  DT::dataTableOutput("tbl")
+                ),
+                tabPanel(
+                  "Chart",
+                  "Note that when side=right, the tab order is reversed."
+                )
               )
             )
           )
