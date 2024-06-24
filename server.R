@@ -216,14 +216,19 @@ function(input, output, session) {
   })
   
   # Visualization box ----
-  occ <- ReLTER::get_site_speciesOccurrences(
-    deimsid = paste0("https://deims.org/", selected_site),
+  occ <- reactive({
+    #broker$getAllDataGBIF()
+    ReLTER::get_site_speciesOccurrences(
+    deimsid = paste0("https://deims.org/", status$selectedSite),
     list_DS = "gbif",
     exclude_inat_from_gbif = TRUE,
     show_map = FALSE,
     limit = 500
-  )
-  shared_data <- SharedData$new(occ$gbif) 
+    )$gbif
+  })
+  
+  shared_data <- SharedData$new(occ) 
+  
   output$map <- leaflet::renderLeaflet({
     leaflet::leaflet(shared_data) |>
       leaflet::addProviderTiles(
