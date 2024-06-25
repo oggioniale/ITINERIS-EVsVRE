@@ -474,14 +474,20 @@ getBroker = function() {
     
     # TODO: complete decoding the resources types in DEIMS SDR.
     # TODO: create png for sources from their original images, in order not to request them too many time.
-    resultsDEIMS<-tibble::tibble(
+    resultsDEIMS <- tibble::tibble(
       source = NA,
       url = NA,
       title = NA,
       resources = NA
     )
-    debug_insi<-info_site()$tbl_relatedResources
-    if(!is.na(debug_insi$relatedResourcesId)){
+    debug_insi <- info_site()$tbl_relatedResources
+    if ("relatedResourcesId" %in% names(debug_insi)) {
+      debug_insi <- debug_insi %>%
+        dplyr::select(
+          relatedResourcesTitle, relatedResourcesChanged, uri = relatedResourcesId
+        )
+    }
+    if(any(!is.na(debug_insi$uri))) {
       resultsDEIMS <- debug_insi %>%
         dplyr::mutate(
           title = relatedResourcesTitle,
