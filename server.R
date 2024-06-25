@@ -14,21 +14,16 @@ function(input, output, session) {
   
   # Tables box ----
   exampleTibble <- tibble::tibble(
-    title = c("titolo1", "titolo2", "titolo3"),
-    url = c("url1/doi1", "url2/doi2", "url3/doi3"),
-    resType = c("Zenodo", "Pangaea", "iNat")
+    source = NA,
+    url = NA,
+    title = NA,
+    resources = NA
   )
   datasets <- reactiveValues(
     # per ora lascio esempi. Poi sono da mettere tutti a NULL
     tblEVsData = exampleTibble,
     tblOtherResData = exampleTibble,
-    tblOtherRepoData = exampleTibble |>
-      dplyr::select(
-        Title = title,
-        `Resource link` = url,
-        `Resource repo` = resType
-      )
-    
+    tblOtherRepoData = exampleTibble
   )
   
   observeEvent(input$site, {
@@ -90,7 +85,7 @@ function(input, output, session) {
     shinybusy::show_modal_spinner(text="fetching data")
     #withProgress(message="fetching data", {
       x<-broker$getEv()
-      #datasets$tblEVsData <- 
+      datasets$tblEVsData <- broker$getEVsData()
       datasets$tblOtherResData <- broker$getOtherResData()
       datasets$tblOtherRepoData <- broker$getOtherRepoData()
     #})

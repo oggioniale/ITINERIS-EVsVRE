@@ -45,6 +45,7 @@ getBroker = function() {
     #' tibble datasets with selectable sites and EVs
     sites <- NULL
     EVs <- NULL
+    evdatasets <- NULL
     
     # a list to store info for sites, in order not to call many times external repo (DEIMS)
     cacheInfoSite <- list()
@@ -117,8 +118,9 @@ getBroker = function() {
   
   init <- function() {
     # init internal vars
-    sites <<- readRDS(sites,file = "static_data/Sites_list.RDS")
-    EVs <<- readRDS(EVs,file = "static_data/EVs.RDS")
+    sites <<- readRDS(file = "static_data/Sites_list.RDS")
+    EVs <<- readRDS(file = "static_data/EVs.RDS")
+    evdatasets <<- readRDS(file = "static_data/datasets.RDS")
     deimsUUID = "f30007c4-8a6e-4f11-ab87-569db54638fe"
     setSite(deimsUUID)
   }
@@ -226,6 +228,23 @@ getBroker = function() {
   }
   
   info_ev <- function() {
+    
+  }
+  
+  # search EVsData ----
+  
+  # results EVsData ----
+  getEVsData <- function() {
+    evdatasets %>%
+      dplyr::filter(deimsUUID == selected_site, ev_id == selected_ev) %>% 
+      dplyr::mutate(
+          url = sprintf("<a href='%s' target='_blank'>%s<a>", url, url),
+          resources = "dataset",
+          source = paste0("<a href='", repo, "' target = '_blank'><img src='", icon_url, "' height='52'/></a>"),
+          title = datasetname,
+          .keep = "unused"
+        ) %>%
+      dplyr::select(source, url, title, resources)
     
   }
   
@@ -455,19 +474,28 @@ getBroker = function() {
     
     # TODO: complete decoding the resources types in DEIMS SDR.
     # TODO: create png for sources from their original images, in order not to request them too many time.
-    resultsDEIMS <- info_site()$tbl_relatedResources %>%
-      dplyr::mutate(
-        title = relatedResourcesTitle,
-        url = sprintf("<a href='https://doi.org/%s' target='_blank'>%s<a>", uri, uri),
-        source = "<a href='https://deims.org/' target = '_blank'><img src='https://elter-ri.eu/storage/app/uploads/public/637/61a/13d/63761a13d4ca2866772974.svg' height='52'/></a>",
-        resources = case_when(
-          stringr::str_detect(uri, stringr::fixed("dataset")) ~ "dataset",
-          stringr::str_detect(uri, stringr::fixed("sensor")) ~ "sensor",
-          TRUE ~ "other"
-        ),
-        .keep="unused"
-      ) %>%
-      dplyr::select(source, url, title, resources)
+    resultsDEIMS<-tibble::tibble(
+      source = NA,
+      url = NA,
+      title = NA,
+      resources = NA
+    )
+    debug_insi<-info_site()$tbl_relatedResources
+    if(!is.na(debug_insi$relatedResourcesId)){
+      resultsDEIMS <- debug_insi %>%
+        dplyr::mutate(
+          title = relatedResourcesTitle,
+          url = sprintf("<a href='https://doi.org/%s' target='_blank'>%s<a>", uri, uri),
+          source = "<a href='https://deims.org/' target = '_blank'><img src='https://elter-ri.eu/storage/app/uploads/public/637/61a/13d/63761a13d4ca2866772974.svg' height='52'/></a>",
+          resources = case_when(
+            stringr::str_detect(uri, stringr::fixed("dataset")) ~ "dataset",
+            stringr::str_detect(uri, stringr::fixed("sensor")) ~ "sensor",
+            TRUE ~ "other"
+          ),
+          .keep="unused"
+        ) %>%
+        dplyr::select(source, url, title, resources)
+    }
     
     # TODO: filter only dataset tip. Query for elasticsearch is "q = resource_type.type:dataset"
     resultsZenodo <- search_zenodo() %>%
@@ -503,7 +531,8 @@ getBroker = function() {
     "getEv" = getEv,
     "getInfo_Site" = info_site,
     "getOtherResData" = getOtherResData,
-    "getOtherRepoData" = getOtherRepoData
+    "getOtherRepoData" = getOtherRepoData,
+    "getEVsData"=getEVsData
   )
   
   
