@@ -51,6 +51,28 @@ getBroker = function() {
     cacheInfoSite <- list()
   }
   
+  # utility functions for caching objects in RDS files
+  {
+    getCachePath<-function(methodName, siteUUID, evID, basepath=tempdir()){
+      rdsname <- paste0(paste(methodName,siteUUID,evID, sep="§"),".RDS")
+      paste0(basepath,"/",rdsname)
+    }
+    
+    readFromCache <- function(methodName, siteUUID, evID){
+      rdsname <- getCachePath(methodName, siteUUID, evID)
+      res<-NULL
+      if(file.exists(rdsname)){
+        res<-readRDS(file = rdsname)  
+      }
+      return(res)
+    }
+    
+    writeToCache<-function(x, methodName, siteUUID, evID){
+      rdsname <- getCachePath(methodName, siteUUID, evID)
+      saveRDS(x,rdsname)
+    }
+  }
+  
   #' set selected site (via its deimsUUID. It must be present in the sites table)
   setSite <- function(deimsUUID) {
     if(!deimsUUID %in% sites$deimsUUID) {
@@ -283,8 +305,12 @@ getBroker = function() {
   # other Mica's datasets
   # TODO: ...
   
-  # results OtherResData ----
+  # results OtherResData [cached] ----
   getOtherResData <- function() {
+    
+    cached <- readFromCache("getOtherResData", selected_site, selected_ev)
+    if (is.null(cached)) {
+      
     if (nrow(search_gbif()) == 500) {
       gbif_occ <- "more than 500"
     } else {
@@ -337,7 +363,10 @@ getBroker = function() {
       dplyr::add_row(resultsINat) %>%
       dplyr::add_row(resultsOBIS)
     
-    return(results)
+    writeToCache(results ,"getOtherResData", selected_site, selected_ev)
+    cached<-results
+    }
+    return(cached)
   }
   
   keyword_data <- function() {
@@ -460,8 +489,10 @@ getBroker = function() {
       }) %>%
       dplyr::bind_rows()
   }
-  # results OtherRepoData
+  # results OtherRepoData [cached] ----
   getOtherRepoData <- function() {
+    cached <- readFromCache("getOtherRepoData", selected_site, selected_ev)
+    if (is.null(cached)) {
     resultsPangaea <- search_pangaea() %>% 
       dplyr::mutate(
         url = sprintf("<a href='https://doi.org/%s' target='_blank'>%s<a>", doi, doi),
@@ -522,7 +553,11 @@ getBroker = function() {
       dplyr::add_row(resultsPangaea) %>%
       dplyr::add_row(resultsZenodo)
 
-    return(results)
+    writeToCache(results ,"getOtherRepoData", selected_site, selected_ev)
+    cached<-results
+    }
+    
+    return(cached)
   }
   
   self <- list(
