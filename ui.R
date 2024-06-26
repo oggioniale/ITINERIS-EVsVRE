@@ -115,7 +115,7 @@ fluidPage(
             ),
             box(
               width = 12,
-              title = "Info box", 
+              title = "Datasets found", 
               closable = FALSE, 
               status = "info", 
               solidHeader = FALSE, 
@@ -126,17 +126,17 @@ fluidPage(
               uiOutput("info_box_OtherRepoData"),
               tabBox(
                 width = 12,
-                selected = "EVsData",
+                selected = "Concerning selected EVs",
                 tabPanel(
-                  "EVsData",
+                  "Concerning selected EVs",
                   DT::dataTableOutput("tableEVsData")
                 ),
                 tabPanel(
-                  "OtherResData",
+                  "Relating to the selected site (structured)",
                   DT::dataTableOutput("tableOtherResData")
                 ),
                 tabPanel(
-                  "OtherRepoData",
+                  "Relating to the selected site (unstructured)",
                   DT::dataTableOutput("tableOtherRepoData")
                 )
               )
@@ -145,7 +145,7 @@ fluidPage(
           fluidRow(
             box(
               width = 12,
-              title = "Visualization",
+              title = "Dataset visualisation",
               closable = FALSE,
               status = "info",
               solidHeader = FALSE,

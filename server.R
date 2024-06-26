@@ -106,24 +106,24 @@ function(input, output, session) {
   
   output$info_box_EVsData <- renderUI({
     infoBox(
-      "Numero di dataset che contribuiscono alla EV selezionata", 
-      nrow(datasets$tblEVsData), 
+      "Concerning selected EVs", 
+      paste0(nrow(datasets$tblEVsData), " dataset(s)"), 
       icon = icon("table"),
       color = "olive"
     )
   })
   output$info_box_OtherResData <- renderUI({
     infoBox(
-      "Numero di dataset accessori",
-      nrow(datasets$tblOtherResData), 
+      "Relating to the selected site (structured)",
+      paste0(nrow(datasets$tblOtherResData), " dataset(s)"), 
       icon = icon("table"),
       color = "olive"
     )
   })
   output$info_box_OtherRepoData <- renderUI({
     infoBox(
-      "Numero di dataset che rispondono alle parole chiave nome sito (e variabile) in altri repo",
-      nrow(datasets$tblOtherRepoData), 
+      "Relating to the selected site (unstructured)",
+      paste0(nrow(datasets$tblOtherRepoData), " dataset(s)"), 
       icon = icon("table"),
       color = "olive"
     )
