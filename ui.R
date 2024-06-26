@@ -139,8 +139,7 @@ fluidPage(
                   "OtherRepoData",
                   DT::dataTableOutput("tableOtherRepoData")
                 )
-              ),
-              "Inserire: tabelle con dataset(s) riferiti alla:\nA. EV selezionata,\n B. dataset(s) accessori (es. iNat, GBIF, ecc.) e\nC. dataset che sono presenti in repo non strutturati (es. DEIMS, Zenodo, Pangea, B2Share).\nSolo i dataset(s) della tabella A e della tabella B possono essere visualizzati nelle tre forme nel box sottostante.\nDovrebbe essere fatto un pulsante in corrispondenza di ogni singola riga nelle 3 tabelle dal quale poter scaricare i singoli datast nell'ambiente del laboratorio virtuale."
+              )
             )
           ),
           fluidRow(
@@ -167,7 +166,7 @@ fluidPage(
                 ),
                 tabPanel(
                   "Chart",
-                  "Note that when side=right, the tab order is reversed."
+                  plotly::plotlyOutput("plot")
                 )
               )
             )

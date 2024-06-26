@@ -6,7 +6,6 @@ library(stringr)
 library(pangaear)
 library(sf)
 library(zen4R)
-library(crosstalk)
 
 #' Factory method to get a stateful controller (broker of data).
 #' @description The factory creates a
