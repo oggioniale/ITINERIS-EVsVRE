@@ -1,19 +1,19 @@
-source("broker.R")
+#source("broker.R")
 
 broker<-getBroker()
 # meglio qui o nel broker/controller?
 
-# DONE: convert these lists into tbl with columns "deimsid", "name", "domain", "active" 
+# DONE: convert these lists into tbl with columns "deimsid", "name", "domain", "active"
 # where `domain` contains one of "marine", "terrestrial", "freshwater"
-# and active is a (temporary) flag to indicate if the site is selectable by the user or not. 
+# and active is a (temporary) flag to indicate if the site is selectable by the user or not.
 # We can also avoid to put them to the list, but I would consider this for future use
 # sites_list <- list(
 #   "Lago Maggiore - Italy" = "https://deims.org/f30007c4-8a6e-4f11-ab87-569db54638fe",
 #   "Delta del Po e Costa Romagnola - Italy" = "https://deims.org/6869436a-80f4-4c6d-954b-a730b348d7ce"
 # )
 
-# DONE: convert into tbl. 
-# Columns: 
+# DONE: convert into tbl.
+# Columns:
 # - ev_id (the same used in deliverable and excel SelectedEvs...)
 # - name
 # - domain: same as the sites table
