@@ -1,11 +1,11 @@
 library(shiny)
-library(shinybusy) 
-library(crosstalk) # 
+library(shinybusy)
+library(crosstalk) #
 #source(broker)
 
 # Define server logic required to draw a histogram
 function(input, output, session) {
-
+  
   # status (Reactive Values "object" to store current status)
   status <- reactiveValues(
     selectedSite = '',
@@ -60,14 +60,14 @@ function(input, output, session) {
     
     shinybusy::show_modal_spinner(text="fetching data")
     #withProgress(message="fetching data", {
-      x<-broker$getInfo_Site() # first call requires some time. 
-      # TODO: add a "progress" to notify this is loading
+    x<-broker$getInfo_Site() # first call requires some time.
+    # TODO: add a "progress" to notify this is loading
     #})
     shinybusy::remove_modal_spinner()
     # load and present site info in panel
     output$siteinfo <- renderUI(tagList(
       a(x$val_title, href=x$val_uri, target="_blank"),
-      div(renderTable(t(x$tbl_generalInfo %>% as_data_frame())))#,
+      div(renderTable(t(x$tbl_generalInfo %>% dplyr::as_data_frame())))#,
       # p("Yearly avg precipitation: ", x$val_precipitation, "[", units::deparse_unit(x$val_precipitation), "]"),
       # p("Biome", x$val_geoBonBiome),
       # p("Biogeographical Region:", x$val_biogeographicalRegion),
@@ -85,13 +85,13 @@ function(input, output, session) {
     # load and present ev info in panel
     shinybusy::show_modal_spinner(text="fetching data")
     #withProgress(message="fetching data", {
-      x<-broker$getEv()
-      datasets$tblEVsData <- broker$getEVsData()
-      datasets$tblOtherResData <- broker$getOtherResData()
-      datasets$tblOtherRepoData <- broker$getOtherRepoData()
+    x<-broker$getEv()
+    datasets$tblEVsData <- broker$getEVsData()
+    datasets$tblOtherResData <- broker$getOtherResData()
+    datasets$tblOtherRepoData <- broker$getOtherRepoData()
     #})
     shinybusy::remove_modal_spinner()
-      #browser()
+    #browser()
     output$EVinfo <- renderUI(tagList(
       a(x$name, href=x$webpage),
       renderTable(x %>% dplyr::select(type, domain, uom), rownames = TRUE),
@@ -106,8 +106,8 @@ function(input, output, session) {
   
   output$info_box_EVsData <- renderUI({
     infoBox(
-      "Concerning selected EVs", 
-      paste0(nrow(datasets$tblEVsData), " dataset(s)"), 
+      "Concerning selected EVs",
+      paste0(nrow(datasets$tblEVsData), " dataset(s)"),
       icon = icon("table"),
       color = "olive"
     )
@@ -115,7 +115,7 @@ function(input, output, session) {
   output$info_box_OtherResData <- renderUI({
     infoBox(
       "Relating to the selected site (structured)",
-      paste0(nrow(datasets$tblOtherResData), " dataset(s)"), 
+      paste0(nrow(datasets$tblOtherResData), " dataset(s)"),
       icon = icon("table"),
       color = "olive"
     )
@@ -123,7 +123,7 @@ function(input, output, session) {
   output$info_box_OtherRepoData <- renderUI({
     infoBox(
       "Relating to the selected site (unstructured)",
-      paste0(nrow(datasets$tblOtherRepoData), " dataset(s)"), 
+      paste0(nrow(datasets$tblOtherRepoData), " dataset(s)"),
       icon = icon("table"),
       color = "olive"
     )
@@ -225,7 +225,7 @@ function(input, output, session) {
   #     coords = c("lat", "lon"),
   #     crs = 4326
   #   )
-  # ) 
+  # )
   
   output$map <- leaflet::renderLeaflet({
     chla_map <- chla %>%
@@ -233,7 +233,7 @@ function(input, output, session) {
       unique() %>%
       sf::st_as_sf(coords = c("lat", "lon"), crs = 4326)
     
-   leaflet::leaflet() %>%
+    leaflet::leaflet() %>%
       leaflet::addProviderTiles(
         "CartoDB.Positron",
         options = leaflet::providerTileOptions(opacity = 0.99)
