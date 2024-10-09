@@ -14,12 +14,15 @@ function(input, output, session) {
   )
   
   # Tables box ----
+  # TODO: unfix data
   exampleTibble <- tibble::tibble(
     source = NA,
     url = NA,
     title = NA,
     resources = NA
   )
+  
+  # TODO: unfix data
   datasets <- reactiveValues(
     # per ora lascio esempi. Poi sono da mettere tutti a NULL
     tblEVsData = exampleTibble,
@@ -112,6 +115,7 @@ function(input, output, session) {
       color = "olive"
     )
   })
+  
   output$info_box_OtherResData <- renderUI({
     infoBox(
       "Relating to the selected site (structured)",
@@ -120,6 +124,7 @@ function(input, output, session) {
       color = "olive"
     )
   })
+  
   output$info_box_OtherRepoData <- renderUI({
     infoBox(
       "Relating to the selected site (unstructured)",
@@ -156,6 +161,7 @@ function(input, output, session) {
       )
     )
   })
+  
   output$tableOtherResData <- DT::renderDataTable({
     DT::datatable(
       datasets$tblOtherResData,
@@ -183,6 +189,7 @@ function(input, output, session) {
       )
     )
   })
+  
   output$tableOtherRepoData <- DT::renderDataTable({
     DT::datatable(
       datasets$tblOtherRepoData,
@@ -212,6 +219,7 @@ function(input, output, session) {
   })
   
   # Visualization box ----
+  # TODO: unfix data
   chla <- ReLTER::get_sos_obs(
     sosURL = "http://getit.lteritalia.it/observations/service",
     procedure = "http://www.get-it.it/sensors/getit.lteritalia.it/procedure/noOwnerDeclared/noModelDeclared/noSerialNumberDeclared/1286194C-A5DF-11DF-8ED7-1602DFD72097",
@@ -227,6 +235,7 @@ function(input, output, session) {
   #   )
   # )
   
+  # TODO: unfix data
   output$map <- leaflet::renderLeaflet({
     chla_map <- chla %>%
       dplyr::select(foiLabel:lat) %>%
@@ -255,6 +264,8 @@ function(input, output, session) {
         )
       )
   })
+  
+  # TODO: unfix data
   attributes(chla)$uri
   output$tbl <- DT::renderDT({
     chla |>
@@ -277,6 +288,8 @@ function(input, output, session) {
         })
       )
   }, server = FALSE)
+  
+  # TODO: unfix data
   output$plot <- plotly::renderPlotly({
     chla |>
       dplyr::select(!(foiLabel:lat)) |>

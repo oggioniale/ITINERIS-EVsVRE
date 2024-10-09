@@ -1,12 +1,15 @@
 #' Run the main app
 #' @import shiny
+#' @param ... other params passed to `shiny::runApp`
 #' @export
-runShinyApp <- function() {
+#' @examples 
+#' ITINERIS.EVsVRE::runShinyApp(launch.browser=rstudioapi::viewer)
+runShinyApp <- function(...) {
   appDir <- system.file("app", package = "ITINERIS.EVsVRE")
   if (appDir == "") {
     stop("Could not find myapp. Try re-installing `ItinerisEVsVRE`.", call. = FALSE)
   }
   #source(appDir)
 
-  shiny::runApp(appDir, display.mode = "normal")
+  shiny::runApp(appDir, display.mode = "normal", ...)
 }

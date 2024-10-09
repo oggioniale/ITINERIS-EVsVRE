@@ -26,8 +26,10 @@
 #' @return the controller object
 #' @author Paolo Tagliolato (ptagliolato)
 #' @author Alessandro Oggioni (oggioniale)
-#' @import dplyr
-#' @import magrittr
+#' @importFrom dplyr select filter mutate inner_join left_join right_join pull
+#' @importFrom magrittr set_names %>% 
+#' @importFrom tibble tibble
+#' @importFrom stringr str_detect
 #' @import ReLTER
 #' @import stringr
 #' @import pangaear
@@ -239,9 +241,9 @@ getBroker = function() {
       # res$val_precipitation      <- units::set_units(res1$precipitation.yearlyAverage,
       #                                     res1$precipitation.unit,mode = "standard")
       # tables
-      res$tbl_eunisHabitats      <- res1$eunisHabitat[[1]] %>% as_tibble() %>% dplyr::select(-uri)
+      res$tbl_eunisHabitats      <- res1$eunisHabitat[[1]] %>% dplyr::as_tibble() %>% dplyr::select(-uri)
       # res$tbl_observedProperties <- res1$observedProperties[[1]] %>% as_tibble()
-      res$tbl_relatedResources   <- res1$relatedResources[[1]] %>% as_tibble()
+      res$tbl_relatedResources   <- res1$relatedResources[[1]] %>% dplyr::as_tibble()
       # res$tbl_dataPolicyRights   <- res1$generalInfo.data.policy.rights[[1]] %>% as_tibble()
       cacheInfoSite[[selected_site]] <<- res
     }
@@ -332,7 +334,8 @@ getBroker = function() {
       } else {
         inat_occ <- nrow(search_inat())
       }
-      site_name <- getSite() %>% pull(name) %>% stringr::str_replace(pattern = " ", replacement = "-") %>% stringr::str_to_lower()
+      site_name <- getSite() %>% dplyr::pull(name) %>% 
+        stringr::str_replace(pattern = " ", replacement = "-") %>% stringr::str_to_lower()
       resultsINat <- tibble::tibble(
         source = "<a href='https://www.inaturalist.org' target = '_blank'><img src='https://static.inaturalist.org/sites/1-logo_square.png' height='52'/></a>",
         url = paste0(
@@ -585,6 +588,36 @@ getBroker = function() {
   # export
   return(self)
 }
+
+
+ebvDataPortal_GetDatasets <- function(api_version="v1", filter){
+  url=sprintf("https://portal.geobon.org/api/%s/datasets", api_version)
+  jj <- get_jj(url)
+  q <- '.data | .[] | {
+  id:.id,
+  title:.title,
+  ebv:.ebv,
+  ebv_entity:.ebv_entity,
+  ebv_geospatial_scope: .ebv_geospatial.ebv_geospatial_scope,
+  ebv_geospatial_description: .ebv_geospatial.ebv_geospatial_description,
+  geospatial_lat_min: .geospatial_lat_min,
+  geospatial_lon_min: .geospatial_lon_min,
+  geospatial_lat_max: .geospatial_lat_max,
+  geospatial_lon_max: .geospatial_lon_max,
+  geospatial_lat_resolution: .geospatial_lat_resolution ,
+  geospatial_lon_resolution: .geospatial_lon_resolution ,
+  geospatial_bounds_crs: .geospatial_bounds_crs,
+  time_coverage_start: .time_coverage_start,
+  time_coverage_end: .time_coverage_end,
+  time_coverage_resolution: .time_coverage_resolution
+  
+  }'
+  
+  # jj %>%
+  #   jqr::jq(as.character(q))
+  do_Q(q, jj)
+}
+
 
 # example usage
 if(FALSE){
