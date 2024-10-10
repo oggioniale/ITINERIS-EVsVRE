@@ -91,13 +91,17 @@ func_files_GPCC <- function(dir_GPCC)
   lapply(paste0(dir_GPCC, subfolders_gpcc), 
          function(u) 
          {
+           # Getting the list of files and their characteristics within the subfolders
            cases2 <- u %>%
              RCurl::getURL(verbose = T, ftp.use.epsv = T, dirlistonly = T) %>%
              XML::getHTMLLinks
            
+           # Getting only the paths
            paste0(u, cases2[grep('nc.gz', cases2, perl = T)])
          }
          ) %>% 
+    
+    # Unlisting the previous list
     unlist
 }
 
@@ -127,14 +131,19 @@ array_gpcc <- function(dir_GPCC, varid, start_date = NULL, end_date = NULL)
   case_ini <- if(is.null(start_date)) {1} else {which(str_detect(files_gz, start_date))}
   case_fin <- if(is.null(end_date)) {length(files_gz)} else {which(str_detect(files_gz, end_date))}
   
+  # Selecting the files considering the start and end dates
   selected_gz <- files_gz[case_ini:case_fin]
   
+  # Opening all selected files as a list of 3D arrays
   open_sel_gz = lapply(selected_gz, function(x) func_GPCC(x, varid))
   
+  # Creating an empty 3D array with the dimensions of the arrays of the previous list
   arr1 <- array(0, dim = c(dim(open_sel_gz[[1]])[1], dim(open_sel_gz[[1]])[2], length(open_sel_gz)))
   
+  # Adding the arrays of the list in the larger one
   for(i in 1:length(open_sel_gz)){arr1[,,i] <- open_sel_gz[[i]]}
   
+  # Showing the final array
   arr1
 }
 
