@@ -26,7 +26,7 @@
 #' @return the controller object
 #' @author Paolo Tagliolato (ptagliolato)
 #' @author Alessandro Oggioni (oggioniale)
-#' @importFrom dplyr select filter mutate inner_join left_join right_join pull
+#' @importFrom dplyr select filter mutate inner_join left_join right_join pull case_when
 #' @importFrom magrittr set_names %>% 
 #' @importFrom tibble tibble
 #' @importFrom stringr str_detect
@@ -526,7 +526,7 @@ getBroker = function() {
             title = relatedResourcesTitle,
             url = sprintf("<a href='https://doi.org/%s' target='_blank'>%s<a>", uri, uri),
             source = "<a href='https://deims.org/' target = '_blank'><img src='https://elter-ri.eu/storage/app/uploads/public/637/61a/13d/63761a13d4ca2866772974.svg' height='52'/></a>",
-            resources = case_when(
+            resources = dplyr::case_when(
               stringr::str_detect(uri, stringr::fixed("dataset")) ~ "dataset",
               stringr::str_detect(uri, stringr::fixed("sensor")) ~ "sensor",
               TRUE ~ "other"
