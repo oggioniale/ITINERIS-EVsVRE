@@ -1,37 +1,4 @@
-######################################################################################################################
-# FUNCTIONS TO DOWNLOAD THE ESSENCIAL VARIABLES (EV)
-
-# This scripts includes the sources and functions to download the data related to the ECV and the EBV variables
-
-
-
-
-######################################################################################################################
-######################################################################################################################
-######################################################################################################################
-######################################################################################################################
-# ESSENCIAL CLIMANTE VARIABLES (ECV)
-
-# library(RCurl); library(dplyr); library(data.table); library(tidync); library(magrittr); library(stringr); library(R.utils)
-
-######################################################################################################################
-######################################################################################################################
-##################                  DWD - GLOBAL PRECIPITATION CLIMATOLOGY CENTRE                   ##################
-######################################################################################################################
-######################################################################################################################
-
-##### CASES
-# https://opendata.dwd.de/climate_environment/GPCC/gpcc_normals_v2022/normals_1951_2000_v2022_025.nc.gz # (func_GPCC) Precipitation 0.25º (varid = precip)
-# https://opendata.dwd.de/climate_environment/GPCC/GPCC_DI/ # (dir_GPCC) Drought index (varid = "di_XX")
-# https://opendata.dwd.de/climate_environment/GPCC/full_data_monthly_v2022/025/ # All data P, num WS, errors # (dir_GPCC) varid = c("precip", "numgauge", "infilled_numgauges", "interpolation_error", "interpolation_error_infilled", "diff_new_old_method" ) # min. 20 MB - max. 300 MB per gzip archive (10 years per archive) 
-# https://opendata.dwd.de/climate_environment/GPCC/GPCC-DI_retro_Analyses/ (dir_GPCC) drought index before 2013 (VARID????) 
-
-# "C:/Users/costy/OneDrive - CNR/Progetti/ITINERIS/Server/Server_v0/Data/DWD/DroughtIndex/GPCC_DI_201301.nc" %>% nc_open() %>% ncvar_get("lon")
-# "C:/Users/costy/OneDrive - CNR/Progetti/ITINERIS/Server/Server_v0/Data/DWD/Temperature/Daily/tas_decreg_europe_v20140120_20101201_20101231.nc" %>% nc_open()
-
-
-##################################################################################
-# Function to read a file of GPCC (Global Precipitation Climatology Centre)
+#' Function to read a file of GPCC (Global Precipitation Climatology Centre)
 #' @description Function to read a file of GPCC (Global Precipitation Climatology Centre)
 #' @return 3D matrix
 #' @importFrom ncdf4 nc_open ncvar_get
@@ -68,7 +35,7 @@ func_GPCC <- function(url, varid)
 
 
 ##################################################################################
-# How to get the files of a folder of the GPCC (Global Precipitation Climatology Centre)
+#' How to get the files of a folder of the GPCC (Global Precipitation Climatology Centre)
 #' @description Function to get the list of files of GPCC (Global Precipitation Climatology Centre)
 #' @return this function returns a list of paths of the selected variable of the GPCC
 #' @importFrom RCurl getURL
@@ -111,7 +78,7 @@ func_files_GPCC <- function(dir_GPCC)
 
 
 ##################################################################################
-# How to open all files together from a startpoint to an endpoint
+#' How to open all files together from a startpoint to an endpoint
 #' @description This function reads and merge all files of the selected dir_GPCC
 #' @return this function returns a 3D array for the selected variable of the GPCC
 #' @importFrom RCurl getURL
