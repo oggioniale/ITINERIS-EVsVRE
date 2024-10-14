@@ -209,29 +209,23 @@ fut_world <- cmip6_world("IPSL-CM6A-LR", "585", "2021-2040", "tmin", 5, path = t
 ##### CASES
 # url = "ftp://ftp.cpc.ncep.noaa.gov/precip/cmap/monthly/" (func_files_CMAP) # Precipitation at monthly level 2.5º resolution
 
-# Function to read a monthly file of the Climate Prediction Center Merged Analysis of Precipitation (CMAP)
-#' @description This function reads one file of the selected URL
-#' @return this function returns a data.table
-#' @importFrom utils download.file
-#' @importFrom magrittr %>%
-#' @importFrom R.utils gunzip
-#' @importFrom data.table fread
-#' @importFrom stringr str_replace
-#' @param url link of the precipitation file of the Climate Prediction Center Merged Analysis of Precipitation (CMAP)
-#' @export
+
+
+
+# FUNCTIONS
+library(RCurl); library(dplyr); library(data.table); library(tidync); library(magrittr); library(stringr); library(R.utils)
+
+# Function to read a file of GPCC (Global Precipitation Climatology Centre)
 func_CMAP <- function(url)
 {
-  # Creating a temporary file that will contain the downloaded gz file
   file_temp = tempfile(pattern = "file_", fileext = paste0("_", basename(url)))
   
-  # Downloading the GZ file
-  utils::download.file(url = url, destfile = file_temp)
+  download.file(url = url, destfile = file_temp)
   
-  # Decrompressing the previous downloaded file
-  file_temp %>% R.utils::gunzip
+  file_temp %>% gunzip
+  data.table::fread(file_temp %>% str_replace('.gz', ''))
   
-  # Reading the previous decompressed file and showing the results
-  data.table::fread(file_temp %>% stringr::str_replace('.gz', ''))
+  # Add the names
 }
 
 
@@ -242,30 +236,17 @@ func_CMAP <- function(url)
 
 ##################################################################################
 # How to get the files of a folder of the Climate Prediction Center Merged Analysis of Precipitation (CMAP)
-#' @description This function gets the links of the files of the Climate Prediction Center Merged Analysis of Precipitation (CMAP) FTP
-#' @return This function returns a vector
-#' @importFrom RCurl getURL
-#' @importFrom magrittr %>%
-#' @importFrom utils glob2rx
-#' @importFrom data.table fread
-#' @importFrom stringr str_replace
-#' @param dir_CMAP link of the precipitation directory of the Climate Prediction Center Merged Analysis of Precipitation (CMAP)
-#' @export
 func_files_CMAP <- function(dir_CMAP)
 {
-  # Reading the paths of the raw files contained in the CMAP FTP
   cases_cmap <- dir_CMAP %>%
-    RCurl::getURL(verbose = T, ftp.use.epsv = T, dirlistonly = T)
+    getURL(verbose = T, ftp.use.epsv = T, dirlistonly = T)
   
-  # Extracting only the paths of the last version (v2409)
   cases_cmap2 <- paste(dir_CMAP, strsplit(cases_cmap, "\r*\n")[[1]], sep = "")
-  cases_cmap2 <- cases_cmap2[stringr::str_detect(cases_cmap2, utils::glob2rx("*v2409_*.txt.gz"))]
+  cases_cmap2 <- cases_cmap2[str_detect(cases_cmap2, glob2rx("*v2409_*.txt.gz"))]
   
-  # Extracting the position of the files of the first and last year (the year has two digits)
   years_yy <- sapply(strsplit(cases_cmap2, "_|.txt"), "[", 4) %>% as.numeric
   year_now <- which(years_yy == Sys.Date() %>% format("%y") %>% as.numeric)
   
-  # Sorting the files from the first to the current year
   cases_cmap2[c((year_now + 1):length(years_yy), 1:year_now)]
 }
 
@@ -274,53 +255,36 @@ func_files_CMAP <- function(dir_CMAP)
 
 
 ##################################################################################
-# How to open all files together from a start_year to an end_year
-#' @description This function gets the links of the files of the Climate Prediction Center Merged Analysis of Precipitation (CMAP) FTP
-#' @return This function returns a 3D-array
-#' @importFrom RCurl getURL
-#' @importFrom magrittr %>%
-#' @importFrom utils glob2rx
-#' @importFrom data.table fread
-#' @importFrom stringr str_replace
-#' @param dir_CMAP link of the precipitation directory of the Climate Prediction Center Merged Analysis of Precipitation (CMAP)
-#' @export
+# How to open all files together from a startpoint to an endpoint I AM NOT SURE ABOUT THE POINT POSITION BUT I SUGGEST TO DISCARD THIS SOURCE
 array_cmap <- function(dir_CMAP, start_year = NULL, end_year = NULL)
 {
-  # Getting the paths of the CMAP files
   files_gz <- func_files_CMAP(dir_CMAP)
   
-  # Getting the position of the first and last CMAP files from the start_year and the last_year
   case_ini <- if(is.null(start_year)) {1} else {which(str_detect(files_gz, substr(start_year, nchar(start_year) - 1, nchar(start_year))))}
   case_fin <- if(is.null(end_year)) {length(files_gz)} else {which(str_detect(files_gz, substr(end_year, nchar(end_year) - 1, nchar(end_year))))}
   
-  # Subset of the CMAP files from the case_ini to case_fin 
   selected_gz <- files_gz[case_ini:case_fin]
   
-  # Opening all the selected files
   open_sel_gz = lapply(selected_gz, function(x) func_CMAP(x))
   
-  # Getting the unique XYZ positions
-  cases_x = unique(open_sel_gz[[1]]$V3)
-  cases_y = unique(open_sel_gz[[1]]$V4)
-  cases_z = unique(open_sel_gz[[1]]$V2)
+  cases_x = unique(open_sel_gz[[1]]$V3); cases_y = unique(open_sel_gz[[1]]$V4); cases_z = unique(open_sel_gz[[1]]$V2)
   
-  # Creating a 3D-array from the previous XYZ positions
   arr1 <- array(0, dim = c(length(cases_x), length(cases_y), length(cases_z) * length(open_sel_gz)))
-
-  # Filling the array looping for each file and date
+  
+  count = 1
+  
   for(i in 1:length(open_sel_gz))
   {
     for (j in 1:length(cases_z))
     {
-      # Subset of the selected dataset and year
       subs_case = open_sel_gz[[i]] %>% filter(V2 == j)
       
-      # Converting the subset to an array and filling it at the position given by i and j
-      arr1[,, ((length(cases_z) - 1) * i + j)] = array(subs_case[,5] %>% unlist, c(length(cases_x), length(cases_y)))
+      arr1[,,i] = array(subs_case[,5] %>% unlist, c(length(cases_x), length(cases_y)))
+      
+      count = count + 1
     }
   }
   
-  # Returning the 3D-array
   arr1
 }
 
@@ -605,111 +569,3 @@ merged_db$data # This DB contains only the data required. The other has addition
 
 aaa ="C:/Users/costy/Downloads/GLODAPv2.2023_Merged_Master_File/GLODAPv2.2023_Merged_Master_File.csv" %>%
   fread %>% select(G2latitude, G2longitude)
-
-
-
-
-
-
-
-
-######################################################################################################################
-######################################################################################################################
-##################                   E-OBS (EUROPEAN CLIMATE ASSESMENT & DATASET)                   ##################
-######################################################################################################################
-######################################################################################################################
-
-# DATA PREVIOUSLY DOWNLOADED!!!!!!!!!!!!!!!!!!!!!
-# eobs_path <- file.path("C:/Users/costy/OneDrive - CNR/Progetti/ITINERIS/Server/Server_v0/Data/EOBS/Tmin/Originals",
-#                        "tn_ens_mean_0.1deg_reg_v30.0e.nc")
-# 
-# shp_path = file.path("C:/Users/costy/OneDrive - CNR/Progetti/ITINERIS/Server/Server_v0/LTER_Sites", 
-#                      "9b1d144a-dc37-4b0e-8cda-1dda1d7667da.shp")
-#' @description This function gets the links of the files of the Climate Prediction Center Merged Analysis of Precipitation (CMAP) FTP
-#' @return This function returns a 3D-array
-#' @importFrom ncdf4 nc_open ncvar_get
-#' @importFrom magrittr %>%
-#' @importFrom sf st_as_sf st_set_crs st_read st_bbox
-#' @importFrom data.table fread
-#' @importFrom tools file_path_sans_ext
-#' @param eobs_path link with the E-OBS path to download
-#' @param shp_path Path of the DEIMS_UUID shapefile
-#' @param ini_year year from which temperature should be considered
-#' @param buffer Buffer around the shapefile box to consider for extracting the E-OBS points
-#' @export
-# Function to read a NetCDF file and extract the points inside the shapefile and the buffer from E-OBS
-func_eobs <- function(eobs_path, shp_path, ini_year, buffer = 0.1)
-{
-  #### Download the file?
-  
-  # Opening the netCDF file
-  nc_opened <- ncdf4::nc_open(eobs_path)
-  
-  # Getting the name of the variable from the basename
-  varid <- strsplit(basename(eobs_path), "_")[[1]][1]
-  
-  # Getting all latitude and longitude coordinates of the netCDF file
-  nc_lat <- ncdf4::ncvar_get(nc_opened, "latitude")
-  nc_lon <- ncdf4::ncvar_get(nc_opened, "longitude")
-  
-  # Creating a list of potential points from nc_lat and nc_lon
-  expanded_latlon <- expand.grid(Lat = nc_lat, Lon = nc_lon) %>% 
-    sf::st_as_sf(coords = c('Lon', 'Lat')) %>%
-    sf::st_set_crs(4326)
-  
-  # Reading the shapefile
-  shp_file <- shp_path %>% sf::st_read
-  
-  # Selecting the points inside the shapefile
-  shp_box <- sf::st_bbox(shp_file)
-  
-  # Points cases within the boundaries of the shapefile considering the buffer
-  sel_lat <- which(between(nc_lat, shp_box[2] - buffer, shp_box[4] + buffer))
-  sel_lon <- which(between(nc_lon, shp_box[1] - buffer, shp_box[3] + buffer))
-  
-  # Expand the selected lat e lon cases
-  pot_coords <- expand.grid(Lon = sel_lon, Lat = sel_lat)
-  
-  # Fixing the initial date
-  t1 <- which(as.Date(nc_opened$dim$time$vals, "1950-01-01") == paste0(ini_year, "-01-01"))
-
-  # Get the variable for all points and showing the results
-  lapply(1:nrow(pot_coords), 
-         function(x) 
-           data.table::data.table(DEIMS_UUID = tools::file_path_sans_ext(basename(shp_path)),
-                                  Lon = nc_lon[pot_coords$Lon[x]],
-                                  Lat = nc_lat[pot_coords$Lat[x]],
-                                  Date = as.Date(nc_opened$dim$time$vals[t1:length(nc_opened$dim$time$vals)], "1950-01-01"),
-                                  Val = ncdf4::ncvar_get(nc_opened, start = c(pot_coords$Lon[x], pot_coords$Lat[x], t1), 
-                                                         count = c(1, 1, length(nc_opened$dim$time$vals) - t1 + 1),
-                                                         varid = nc_opened$var[[1]][2]$name)))
-}
-
-
-
-
-library(climateExtract)
-fr_border = sf::st_as_sf(geodata::gadm("GADM", country = "FRA", level = 0))
-sf_point = sf::st_sf(sf::st_sample(x = fr_border, size = 25, type = "random"))
-
-climate_data_min = extract_nc_value(first_year = 2012, 
-                                    last_year = 2015,
-                                    local_file = FALSE,
-                                    file_path = NULL,
-                                    sml_chunk = "2011-2024",
-                                    spatial_extent = fr_border,
-                                    clim_variable = "min temp",
-                                    statistic = "mean",
-                                    grid_size = 0.1,
-                                    ecad_v = "30.0",
-                                    write_raster = TRUE,
-                                    out = "raster_min_temp.tiff",
-                                    return_data = TRUE)
-
-ecad_version <- 30.0
-
-# Ho modificato questa versione di questo package e voglio testare si mi scarica i dati da e-obs automaticamente
-# così lo metto all'inizio della funzione precedente
-get_nc_online(first_year = 2012, last_year = 2015, 
-              sml_chunk = "", clim_variable = "min temp", 
-              statistic = "mean", grid_size = 0.1, ecad_v = "30.0")
