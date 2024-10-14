@@ -29,11 +29,11 @@
 #' @importFrom dplyr select filter mutate inner_join left_join right_join pull case_when
 #' @importFrom magrittr set_names %>% 
 #' @importFrom tibble tibble
-#' @importFrom stringr str_detect
+#' @importFrom stringr
 #' @import ReLTER
-#' @import stringr str_detect
-#' @import pangaear pg_search
-#' @import sf st_geometry st_bbox
+#' @import stringr
+#' @import pangaear
+#' @import sf
 #' @import zen4R
 #' @export
 getBroker = function() {
@@ -458,7 +458,7 @@ getBroker = function() {
       print("No boundary for requested DEIMS site.")
       return(NULL)
     } else {
-      bbox <- sf::st_bbox(boundary) %>%
+      bbox <- st_bbox(boundary) %>%
         as.double()
     }
     pgRecords <- pangaear::pg_search(
@@ -527,8 +527,8 @@ getBroker = function() {
             url = sprintf("<a href='https://doi.org/%s' target='_blank'>%s<a>", uri, uri),
             source = "<a href='https://deims.org/' target = '_blank'><img src='https://elter-ri.eu/storage/app/uploads/public/637/61a/13d/63761a13d4ca2866772974.svg' height='52'/></a>",
             resources = dplyr::case_when(
-              stringr::str_detect(uri, stringr::fixed("dataset")) ~ "dataset",
-              stringr::str_detect(uri, stringr::fixed("sensor")) ~ "sensor",
+              str_detect(uri, stringr::fixed("dataset")) ~ "dataset",
+              str_detect(uri, stringr::fixed("sensor")) ~ "sensor",
               TRUE ~ "other"
             ),
             .keep="unused"
