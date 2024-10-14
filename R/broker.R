@@ -31,9 +31,9 @@
 #' @importFrom tibble tibble
 #' @importFrom stringr str_detect
 #' @import ReLTER
-#' @import stringr
-#' @import pangaear
-#' @import sf
+#' @import stringr str_detect
+#' @import pangaear pg_search
+#' @import sf st_geometry st_bbox
 #' @import zen4R
 #' @export
 getBroker = function() {
@@ -615,7 +615,7 @@ ebvDataPortal_GetDatasets <- function(api_version="v1", filter){
   
   # jj %>%
   #   jqr::jq(as.character(q))
-  do_Q(q, jj)
+  ReLTER::do_Q(q, jj)
 }
 
 
