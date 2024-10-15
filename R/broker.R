@@ -615,7 +615,7 @@ ebvDataPortal_GetDatasets <- function(api_version="v1", filter){
   
   # jj %>%
   #   jqr::jq(as.character(q))
-  ReLTER::do_Q(q, jj)
+  do_Q(q, jj)
 }
 
 
