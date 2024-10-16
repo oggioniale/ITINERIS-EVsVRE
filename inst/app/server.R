@@ -218,6 +218,32 @@ function(input, output, session) {
     )
   })
   
+  # -- START REMOVE THIS AFTER DEVELOPMENT
+  output$debug <- renderPrint({
+    cat('\nRows on the current current EVsData table:\n\n')
+    cat(input$tableEVsData_rows_current, sep = ', ')
+    cat('\n\nAll rows:\n\n')
+    cat(input$tableEVsData_rows_all, sep = ', ')
+    cat('\n\nSelected rows:\n\n')
+    cat(input$tableEVsData_rows_selected, sep = ', ')
+    
+    cat('\nRows on the current current EVsData table:\n\n')
+    cat(input$tableOtherResData_rows_current, sep = ', ')
+    cat('\n\nAll rows:\n\n')
+    cat(input$tableOtherResData_rows_all, sep = ', ')
+    cat('\n\nSelected rows:\n\n')
+    cat(input$tableOtherResData_rows_selected, sep = ', ')
+    
+    cat('\nRows on the current current EVsData table:\n\n')
+    cat(input$tableOtherRepoData_rows_current, sep = ', ')
+    cat('\n\nAll rows:\n\n')
+    cat(input$tableOtherRepoData_rows_all, sep = ', ')
+    cat('\n\nSelected rows:\n\n')
+    cat(input$tableOtherRepoData_rows_selected, sep = ', ')
+  })
+  # -- END REMOVE THIS AFTER DEVELOPMENT
+  
+  
   # Visualization box ----
   # TODO: unfix data
   chla <- ReLTER::get_sos_obs(

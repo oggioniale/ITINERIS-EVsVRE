@@ -109,7 +109,7 @@ fluidPage(
                 label = HTML("select EV"),
                 multiple = FALSE,
                 choices = broker$EVsList(),
-                selected = ""
+                selected = NULL
               ),
               uiOutput("EVinfo")
             ),
@@ -142,6 +142,16 @@ fluidPage(
               )
             )
           ),
+          # -- START REMOVE THIS AFTER DEVELOPMENT
+          fluidRow(
+            box(
+              width = 12,
+              title="debug info",
+              status="info",
+              shiny::textOutput("debug")
+            )  
+          ),
+          # -- END REMOVE THIS AFTER DEVELOPMENT
           fluidRow(
             box(
               width = 12,
