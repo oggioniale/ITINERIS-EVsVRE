@@ -192,12 +192,12 @@ function(input, output, session) {
   })
   
   observeEvent(input$tableOtherResData_cell_clicked, {
-    broker$getActualDataset_OtherRes()
+    broker$getActualDataset_OtherRes(input$tableOtherResData_cell_clicked$row)
 
   })
   
   observeEvent(input$tableOtherRepoData_cell_clicked, {
-    info = input$tableOtherRepoData_cell_clicked
+    #info = input$tableOtherRepoData_cell_clicked$row
     # info is a list(row = row_index, col = column_index, value = cell_value)
     # broker$
   })
