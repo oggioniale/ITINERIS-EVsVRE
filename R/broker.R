@@ -580,7 +580,7 @@ getBroker = function() {
   }
   
   # methods to retrieve actual datasets from selected row of one of the three categories
-  getActualDataset_EVrelated<-function(row_id){
+  getActualDataset_EVrelated <- function(row_id){
     # thedatasetrow=getEVsData() %>% .[row_id]
     # #read in the dataset type
     # choose the appropriate method to read the data in
@@ -599,20 +599,22 @@ getBroker = function() {
   }
   
   # zenodo pangaea etc
-  getActualDataset_OtherRepo<-function(row_id){
+  getActualDataset_OtherRepo <- function(row_id) {
     
   }
 
   # obis etc
-  getActualDataset_OtherRes<-function(row_id){
+  getActualDataset_OtherRes <- function(row_id) {
     # THIS IS A TEST. assess the row_numbers.
-    if(row_id==1){
-      return(search_gbif())}
-    if(row_id==2){
-      return(search_inat())}
-    if(row_id==3){
-      return(search_obis())}
-    
+    if (row_id == 1) {
+      return(search_gbif())
+    }
+    if (row_id == 2) {
+      return(search_inat())
+    }
+    if (row_id == 3) {
+      return(search_obis())
+    }
   }
   
   # add functions to this named list to export them
@@ -644,7 +646,7 @@ getBroker = function() {
 }
 
 
-ebvDataPortal_GetDatasets <- function(api_version="v1", filter){
+ebvDataPortal_GetDatasets <- function(api_version = "v1", filter){
   url=sprintf("https://portal.geobon.org/api/%s/datasets", api_version)
   jj <- get_jj(url)
   q <- '.data | .[] | {
@@ -696,4 +698,3 @@ if(FALSE){
   
   otherResData<-b$getOtherResData()
 }
-#

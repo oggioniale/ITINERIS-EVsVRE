@@ -145,10 +145,11 @@ function(input, output, session) {
     DT::datatable(
       datasets$tblEVsData,
       escape = FALSE,
+      selection = "single",
       caption = htmltools::tags$caption(
         style = 'text-align: center;',
         htmltools::h3(paste0(
-          'Contains resources related with selected EV and site'
+          'Contains resources related directly with selected EV and site'
         ))
       ),
       filter = 'top'
@@ -159,10 +160,11 @@ function(input, output, session) {
     DT::datatable(
       datasets$tblOtherResData,
       escape = FALSE,
+      selection = "single",
       caption = htmltools::tags$caption(
         style = 'text-align: center;',
         htmltools::h3(paste0(
-          'Contains resources related with selected site and collected from GBIF, iNaturalist, and OBIS'
+          'Includes resources related to the selected site, collected from domain-specific repositories (e.g. GBIF, iNaturalist, OBIS)'
         ))
       ),
       filter = 'top'
@@ -173,10 +175,11 @@ function(input, output, session) {
     DT::datatable(
       datasets$tblOtherRepoData,
       escape = FALSE,
+      selection = "single",
       caption = htmltools::tags$caption(
         style = 'text-align: center;',
         htmltools::h3(paste0(
-          'Contains resources related with selected site and collected from DEIMS-SDR, Pangaea, and Zenodo'
+          'Includes resources associated with the selected site, collected from non-structured or general-purpose repositories (e.g. DEIMS-SDR, Pangaea, Zenodo)'
         ))
       ),
       filter = 'top'
@@ -189,15 +192,15 @@ function(input, output, session) {
   })
   
   observeEvent(input$tableOtherResData_cell_clicked, {
-    
-    broker$getOtherResData()
+    broker$getActualDataset_OtherRes()
   })
   
   observeEvent(input$tableOtherRepoData_cell_clicked, {
     info = input$tableOtherRepoData_cell_clicked
     # info is a list(row = row_index, col = column_index, value = cell_value)
-    broker$
+    # broker$
   })
+  
   # -- START REMOVE THIS AFTER DEVELOPMENT
   output$debug <- renderPrint({
     cat('\nRows on the current current EVsData table:\n\n')
