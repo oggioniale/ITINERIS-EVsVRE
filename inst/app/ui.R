@@ -173,11 +173,11 @@ fluidPage(
                 tabPanel(
                   "Table",
                   DT::dataTableOutput("tbl")
-                ),
-                tabPanel(
-                  "Chart",
-                  plotly::plotlyOutput("plot")
-                )
+                )#,
+                # tabPanel(
+                #   "Chart",
+                #   plotly::plotlyOutput("plot")
+                # )
               )
             )
           )

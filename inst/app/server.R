@@ -144,21 +144,7 @@ function(input, output, session) {
           'Contains resources related with selected EV and site'
         ))
       ),
-      filter = 'top',
-      extensions = 'Buttons',
-      options = list(
-        dom = 'Bfrtip',
-        buttons = list(
-          "copy",
-          list(
-            extend = "collection",
-            text = 'Use selected dataset in my VRE session',
-            action = DT::JS("function ( e, dt, node, config ) {
-                                    alert( 'Button activated' );
-                                }")
-          )
-        )
-      )
+      filter = 'top'
     )
   })
   
@@ -172,21 +158,7 @@ function(input, output, session) {
           'Contains resources related with selected site and collected from GBIF, iNaturalist, and OBIS'
         ))
       ),
-      filter = 'top',
-      extensions = 'Buttons',
-      options = list(
-        dom = 'Bfrtip',
-        buttons = list(
-          # "copy",
-          list(
-            extend = "collection",
-            text = 'Use selected dataset in my VRE session',
-            action = DT::JS("function ( e, dt, node, config ) {
-                                    alert( 'Button activated' );
-                                }")
-          )
-        )
-      )
+      filter = 'top'
     )
   })
   
@@ -200,21 +172,7 @@ function(input, output, session) {
           'Contains resources related with selected site and collected from DEIMS-SDR, Pangaea, and Zenodo'
         ))
       ),
-      filter = 'top',
-      extensions = 'Buttons',
-      options = list(
-        dom = 'Bfrtip',
-        buttons = list(
-          # "copy",
-          list(
-            extend = "collection",
-            text = 'Use selected dataset in my VRE session',
-            action = DT::JS("function ( e, dt, node, config ) {
-                                    alert( 'Button activated' );
-                                }")
-          )
-        )
-      )
+      filter = 'top'
     )
   })
   
