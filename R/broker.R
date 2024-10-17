@@ -604,15 +604,18 @@ getBroker = function() {
   }
 
   # obis etc
-  getActualDataset_OtherRes <- function(row_id) {
+  getActualDataset_ObisGBifInat <- function(row_id) {
     # THIS IS A TEST. assess the row_numbers.
     if (row_id == 1) {
+      message("retrieving GBIF observations")
       return(search_gbif())
     }
     if (row_id == 2) {
+      message("retrieving INaturalist observations")
       return(search_inat())
     }
     if (row_id == 3) {
+      message("retrieving OBIS observations")
       return(search_obis())
     }
   }
@@ -629,10 +632,10 @@ getBroker = function() {
     "setEv" = setEv,
     "getEv" = getEv,
     "getInfo_Site" = info_site,
-    "getOtherResData" = getOtherResData,
+    "getOtherResData" = getOtherResData, # table with number of records from OBIS, GBIF, INaturalist 
     "getOtherRepoData" = getOtherRepoData,
-    "getEVsData"=getEVsData,
-    "getActualDataset_OtherRes"<-getActualDataset_OtherRes
+    "getEVsData" = getEVsData,
+    "getActualDataset_OtherRes" = getActualDataset_ObisGBifInat
   )
   
   
@@ -677,6 +680,7 @@ ebvDataPortal_GetDatasets <- function(api_version = "v1", filter){
 
 # example usage
 if(FALSE){
+  # library(ITINERIS.EVsVRE)
   b <- getBroker()
   deimsUUID = "f30007c4-8a6e-4f11-ab87-569db54638fe"
   b$setSite(deimsUUID)
@@ -696,5 +700,6 @@ if(FALSE){
   # alt name of site
   b$getSite() %>% dplyr::pull(alt_name)
   
-  otherResData<-b$getOtherResData()
+  b$getActualDataset_OtherRes(1)
+  
 }
