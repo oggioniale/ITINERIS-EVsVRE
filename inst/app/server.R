@@ -192,7 +192,17 @@ function(input, output, session) {
   })
   
   observeEvent(input$tableOtherResData_cell_clicked, {
-    broker$getActualDataset_OtherRes(input$tableOtherResData_cell_clicked$row)
+    info <- input$tableOtherResData_cell_clicked
+    
+    message("selected row is", info$row)
+    if(! is.null(info) && !is.null(info$row) && info$row > 0 && info$row<=3 ){
+      # per assegnare al RV che contiene i dataset correntemente selezionati dall'utente nelle 3 tabelle di risultato
+      # theDataset$datasetRes<-broker$getActualDataset_OtherRes(info$row) 
+      # altrimenti prendere al volo dalla broker e assegnare a una variabile locale a questo observe event.
+      # come segue:
+      dataset <- broker$getActualDataset_OtherRes(info$row) 
+    }
+    #
 
   })
   
