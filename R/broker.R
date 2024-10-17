@@ -268,12 +268,13 @@ getBroker = function() {
         .keep = "unused"
       ) %>%
       dplyr::select(source, url, title, resources)
-    
   }
   
   # searches OtherResData ----
   # GBIF
   search_gbif <- function() {
+    cached <- readFromCache("search_gbif", selected_site, "void")
+    if(is.null(cached)){
     occ <- ReLTER::get_site_speciesOccurrences(
       deimsid = paste0("https://deims.org/", selected_site),
       list_DS = "gbif",
@@ -282,9 +283,15 @@ getBroker = function() {
       limit = 500
     )
     occ <- occ$gbif
+    writeToCache(occ, "search_gbif", selected_site, "void")
+    cached<-occ
+    }
+    return(cached)
   }
   # iNat
   search_inat <- function() {
+    cached <- readFromCache("search_inat", selected_site, "void")
+    if(is.null(cached)){
     occ <- ReLTER::get_site_speciesOccurrences(
       deimsid = paste0("https://deims.org/", selected_site),
       list_DS = "inat",
@@ -292,9 +299,15 @@ getBroker = function() {
       limit = 500
     )
     occ <- occ$inat
+    writeToCache(occ, "search_inat", selected_site,"void")
+    cached<-occ
+    }
+    return(cached)
   }
   # OBIS
   search_obis <- function() {
+    cached <- readFromCache("search_obis", selected_site, "void")
+    if(is.null(cached)){
     occ <- ReLTER::get_site_speciesOccurrences(
       deimsid = paste0("https://deims.org/", selected_site),
       list_DS = "obis",
@@ -302,6 +315,10 @@ getBroker = function() {
       limit = 500
     )
     occ <- occ$obis
+    writeToCache(occ, "search_obis", selected_site, "void")
+    cached<-occ
+    }
+    return(cached)
   }
   # other Mica's datasets
   # TODO: ...
@@ -309,7 +326,7 @@ getBroker = function() {
   # results OtherResData [cached] ----
   getOtherResData <- function() {
     
-    cached <- readFromCache("getOtherResData", selected_site, selected_ev)
+    cached <- readFromCache("getOtherResData", selected_site, "void")
     if (is.null(cached)) {
       
       if (nrow(search_gbif()) == 500) {
@@ -365,7 +382,7 @@ getBroker = function() {
         dplyr::add_row(resultsINat) %>%
         dplyr::add_row(resultsOBIS)
       
-      writeToCache(results ,"getOtherResData", selected_site, selected_ev)
+      writeToCache(results ,"getOtherResData", selected_site, "void")
       cached<-results
     }
     return(cached)
@@ -562,6 +579,42 @@ getBroker = function() {
     return(cached)
   }
   
+  # methods to retrieve actual datasets from selected row of one of the three categories
+  getActualDataset_EVrelated<-function(row_id){
+    # thedatasetrow=getEVsData() %>% .[row_id]
+    # #read in the dataset type
+    # choose the appropriate method to read the data in
+    # sf::read_sf(datapath)
+    # ...
+    # set theDataset somewhere?
+    # use that slot also to write the RDS when needed
+    
+    exampleTibble <- tibble::tibble(
+      id="1",
+      this = "is",
+      an = "example",
+      title = "the record 1"
+    )
+    return(exampleTibble)
+  }
+  
+  # zenodo pangaea etc
+  getActualDataset_OtherRepo<-function(row_id){
+    
+  }
+
+  # obis etc
+  getActualDataset_OtherRes<-function(row_id){
+    # THIS IS A TEST. assess the row_numbers.
+    if(row_id==1){
+      return(search_gbif())}
+    if(row_id==2){
+      return(search_inat())}
+    if(row_id==3){
+      return(search_obis())}
+    
+  }
+  
   # add functions to this named list to export them
   self <- list(
     "setSite" = setSite,
@@ -576,7 +629,8 @@ getBroker = function() {
     "getInfo_Site" = info_site,
     "getOtherResData" = getOtherResData,
     "getOtherRepoData" = getOtherRepoData,
-    "getEVsData"=getEVsData
+    "getEVsData"=getEVsData,
+    "getActualDataset_OtherRes"<-getActualDataset_OtherRes
   )
   
   
@@ -640,5 +694,6 @@ if(FALSE){
   # alt name of site
   b$getSite() %>% dplyr::pull(alt_name)
   
+  otherResData<-b$getOtherResData()
 }
 #

@@ -30,6 +30,13 @@ function(input, output, session) {
     tblOtherRepoData = exampleTibble
   )
   
+  # reactive to store the actual data selected by the user in each "datasets" list
+  theDataset<-reactiveValues(
+    datasetEv = NULL,
+    datasetRes = NULL,
+    datasetOther = NULL
+  )
+  
   observeEvent(input$site, {
     message("ev site$ev:", input$site)
     status$selectedSite <- input$site
@@ -176,6 +183,21 @@ function(input, output, session) {
     )
   })
   
+  # events on result lists (dataset selection)
+  observeEvent(input$tableEVsData_cell_clicked, {
+    
+  })
+  
+  observeEvent(input$tableOtherResData_cell_clicked, {
+    
+    broker$getOtherResData()
+  })
+  
+  observeEvent(input$tableOtherRepoData_cell_clicked, {
+    info = input$tableOtherRepoData_cell_clicked
+    # info is a list(row = row_index, col = column_index, value = cell_value)
+    broker$
+  })
   # -- START REMOVE THIS AFTER DEVELOPMENT
   output$debug <- renderPrint({
     cat('\nRows on the current current EVsData table:\n\n')
