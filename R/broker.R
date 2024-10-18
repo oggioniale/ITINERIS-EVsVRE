@@ -312,16 +312,23 @@ getBroker = function() {
   }
   # OBIS
   search_obis <- function() {
+    #browser()
     cached <- readFromCache("search_obis", selected_site, "void")
     if(is.null(cached)){
       message("... search OBIS")
-      occ <- ReLTER::get_site_speciesOccurrences(
-        deimsid = paste0("https://deims.org/", selected_site),
-        list_DS = "obis",
-        show_map = FALSE,
-        limit = 500
+      occ<-NULL
+      tryCatch(expr = {
+        occ <- ReLTER::get_site_speciesOccurrences(
+          deimsid = paste0("https://deims.org/", selected_site),
+          list_DS = "obis",
+          show_map = FALSE,
+          limit = 500
+        )
+        occ <- occ$obis
+      },error=function(e){
+        warning("something went wrong while getting OBIS observation")
+      }
       )
-      occ <- occ$obis
       writeToCache(occ, "search_obis", selected_site, "void")
       cached<-occ
     }
@@ -374,18 +381,28 @@ getBroker = function() {
       )
       
       # resultsOBIS
-      if (nrow(search_obis()) == 500) {
-        obis_occ <- "more than 500"
+      #message("** broker.r - row 380")
+      resultObis<-search_obis()
+      #message("** broker.r - row 382")
+      if(is.null(resultObis)){
+        obis_occ<-0
       } else {
-        obis_occ <- nrow(search_obis())
+        if (nrow(resultObis) == 500) {
+          obis_occ <- "more than 500"
+        } else {
+          obis_occ <- nrow(resultObis)
+        }
       }
+      #message("** broker.r - row 392")
       resultsOBIS <- tibble::tibble(
         source = "<a href='https://obis.org' target = '_blank'><img src='https://classroom.oceanteacher.org/pluginfile.php/43689/course/overviewfiles/obis-logo-moodle.png' height='52'/></a>",
         url = paste0("-"),
         title = "Species occurrences in the area surrounding the site",
-        resources = paste("more than", obis_occ, "specie occurrences")
+        resources = paste(obis_occ, "species occurrences")
       )
       
+      message("** broker.r - row 400")
+      #browser()
       results <- resultsGBIF %>%
         dplyr::add_row(resultsINat) %>%
         dplyr::add_row(resultsOBIS)
@@ -721,6 +738,7 @@ if(FALSE){
   # library(ITINERIS.EVsVRE)
   b <- getBroker()
   deimsUUID = "f30007c4-8a6e-4f11-ab87-569db54638fe"
+  collelongo="9b1d144a-dc37-4b0e-8cda-1dda1d7667da"
   b$setSite(deimsUUID)
   b$getSite()
   b$getInfo_Site() # the first call for a given site takes more time, result is then cached and quickly accessible
@@ -740,7 +758,7 @@ if(FALSE){
   # alt name of site
   b$getSite() %>% dplyr::pull(alt_name)
   
-  b$setSite("9b1d144a-dc37-4b0e-8cda-1dda1d7667da")
+  b$setSite("9b1d144a-dc37-4b0e-8cda-1dda1d7667da") #collelongo
   b$setEv("4.2.1")
   b$getEVsData()
   b$getActualDataset_EVrelated(row_id = 1)
@@ -749,5 +767,12 @@ if(FALSE){
   
   b$getActualDataset_EVrelated(1)  
   ITINERIS.EVsVRE:::datasets
+  
+  ReLTER::get_site_speciesOccurrences(
+    deimsid = paste0("https://deims.org/", collelongo),
+    list_DS = "obis",
+    show_map = FALSE,
+    limit = 500
+  )
   
 }
