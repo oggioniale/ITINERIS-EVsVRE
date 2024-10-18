@@ -186,30 +186,43 @@ function(input, output, session) {
     )
   })
   
-  # events on result lists (dataset selection)
-  observeEvent(input$tableEVsData_cell_clicked, {
-    
-  })
-  
-  observeEvent(input$tableOtherResData_cell_clicked, {
-    info <- input$tableOtherResData_cell_clicked
-    
-    message("selected row is", info$row)
-    if(! is.null(info) && !is.null(info$row) && info$row > 0 && info$row<=3 ){
-      # per assegnare al RV che contiene i dataset correntemente selezionati dall'utente nelle 3 tabelle di risultato
-      # theDataset$datasetRes<-broker$getActualDataset_OtherRes(info$row) 
-      # altrimenti prendere al volo dalla broker e assegnare a una variabile locale a questo observe event.
-      # come segue:
-      dataset <- broker$getActualDataset_OtherRes(info$row) 
-    }
-    #
-
-  })
+  # # events on result lists (dataset selection)
+  # observeEvent(input$tableEVsData_cell_clicked, {
+  #   info <- input$tableEVsData_cell_clicked
+  #   message("selected row is", info$row)
+  #   if(! is.null(info) && !is.null(info$row) && info$row > 0 && info$row<=3 ){
+  #     dataset <- broker$getActualDataset_EVrelated(info$row)
+  #     theDataset$datasetEv <- dataset
+  #   }
+  #   
+  # })
+  # 
+  # observeEvent(input$tableOtherResData_cell_clicked, {
+  #   info <- input$tableOtherResData_cell_clicked
+  #   
+  #   message("selected row is", info$row)
+  #   if(! is.null(info) && !is.null(info$row) && info$row > 0 && info$row<=3 ){
+  #     # per assegnare al RV che contiene i dataset correntemente selezionati dall'utente nelle 3 tabelle di risultato
+  #     # theDataset$datasetRes<-broker$getActualDataset_OtherRes(info$row) 
+  #     # altrimenti prendere al volo dalla broker e assegnare a una variabile locale a questo observe event.
+  #     # come segue:
+  #     dataset <- broker$getActualDataset_OtherRes(info$row) 
+  #     theDataset$datasetRes <- dataset
+  #   }
+  #   #
+  # 
+  # })
   
   observeEvent(input$tableOtherRepoData_cell_clicked, {
+    # at the moment we do not do anything here.
+    # we can consider downloading something e.g. for pangaea, using the panagaear functions
+    
     #info = input$tableOtherRepoData_cell_clicked$row
     # info is a list(row = row_index, col = column_index, value = cell_value)
     # broker$
+    #theDataset$datasetOther <- dataset
+    #
+    #
   })
   
   # -- START REMOVE THIS AFTER DEVELOPMENT
@@ -234,6 +247,12 @@ function(input, output, session) {
     cat(input$tableOtherRepoData_rows_all, sep = ', ')
     cat('\n\nSelected rows:\n\n')
     cat(input$tableOtherRepoData_rows_selected, sep = ', ')
+    
+    # cat('<br>user selected EV dataset of class')
+    # cat(class(theDataset$datasetEV ))
+    # 
+    # cat('<br>user selected Other res dataset of class')
+    # cat(class(theDataset$datasetRes ))
   })
   # -- END REMOVE THIS AFTER DEVELOPMENT
   

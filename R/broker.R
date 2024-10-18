@@ -19,9 +19,9 @@
 #'
 #' getInfo_Site:
 #'
-#' getOtherResData:
-#' getOtherRepoData:
-#' getEVsData:
+#' getOtherResData: list of structured dataset in the selected site boundary (e.g. GBIF observation records)
+#' getOtherRepoData: list of dataset in the selected site boundary from other "generic" repositories (e.g. Zenodo). The datasets does not follow specific schema.
+#' getEVsData: list of dataset related to the selected site and the selected EV. These are specifically identified by the work of EV-VRE team.
 #'
 #' @return the controller object
 #' @author Paolo Tagliolato (ptagliolato)
@@ -29,7 +29,6 @@
 #' @importFrom dplyr select filter mutate inner_join left_join right_join pull case_when
 #' @importFrom magrittr set_names %>% 
 #' @importFrom tibble tibble
-#' @importFrom stringr
 #' @import ReLTER
 #' @import stringr
 #' @import pangaear
@@ -91,7 +90,7 @@ getBroker = function() {
   }
   
   # get the available EVs for the currently selected site (they depend on the domain of the site)
-  getCurrentSiteAvailableEVs <- function(){
+  getSelectedSiteAvailableEVs <- function(){
     suppressMessages(
       ll <- EVs %>%
         dplyr::inner_join(
@@ -105,7 +104,7 @@ getBroker = function() {
   
   # Set the selected EV. Warn if the `id` is not present in the `EVs` object
   setEv <- function(id){
-    if(!id %in% getCurrentSiteAvailableEVs()$id) {
+    if(!id %in% getSelectedSiteAvailableEVs()$id) {
       warning("EV must be specified by its id and must be available for the current site")
       return
     }
@@ -120,7 +119,7 @@ getBroker = function() {
       )
   }
   
-  # return th named list of site deimsUUID, useful for selectizeInput in shiny UI
+  # return the named list of site deimsUUID, useful for selectizeInput in shiny UI
   siteList <- function() {
     sites$deimsUUID %>%
       magrittr::set_names(
@@ -130,7 +129,7 @@ getBroker = function() {
   
   # return the named list of (current site's) EV ids, useful for selectizeInput in shiny UI
   EVsList <- function() {
-    curev <- getCurrentSiteAvailableEVs() %>%
+    curev <- getSelectedSiteAvailableEVs() %>%
       dplyr::mutate(
         label = sprintf("%s (%s) - %s", name, type, domain)
       )
@@ -255,11 +254,15 @@ getBroker = function() {
   }
   
   # search EVsData ----
-  
-  # results EVsData ----
-  getEVsData <- function() {
+  getEVsDatasetResultList<- function(){
     evdatasets %>%
-      dplyr::filter(deimsUUID == selected_site, ev_id == selected_ev) %>%
+      dplyr::filter(deimsUUID == selected_site, ev_id == selected_ev)
+  }
+  # results EVsData ----
+  getEVsDatasetResultListForGUI <- function() {
+    # evdatasets %>%
+    #   dplyr::filter(deimsUUID == selected_site, ev_id == selected_ev) 
+    getEVsDatasetResultList() %>%
       dplyr::mutate(
         url = sprintf("<a href='%s' target='_blank'>%s<a>", url, url),
         resources = "dataset",
@@ -273,18 +276,20 @@ getBroker = function() {
   # searches OtherResData ----
   # GBIF
   search_gbif <- function() {
+    
     cached <- readFromCache("search_gbif", selected_site, "void")
     if(is.null(cached)){
-    occ <- ReLTER::get_site_speciesOccurrences(
-      deimsid = paste0("https://deims.org/", selected_site),
-      list_DS = "gbif",
-      exclude_inat_from_gbif = TRUE,
-      show_map = FALSE,
-      limit = 500
-    )
-    occ <- occ$gbif
-    writeToCache(occ, "search_gbif", selected_site, "void")
-    cached<-occ
+      message("... search GBIF")
+      occ <- ReLTER::get_site_speciesOccurrences(
+        deimsid = paste0("https://deims.org/", selected_site),
+        list_DS = "gbif",
+        exclude_inat_from_gbif = TRUE,
+        show_map = FALSE,
+        limit = 500
+      )
+      occ <- occ$gbif
+      writeToCache(occ, "search_gbif", selected_site, "void")
+      cached<-occ
     }
     return(cached)
   }
@@ -292,6 +297,7 @@ getBroker = function() {
   search_inat <- function() {
     cached <- readFromCache("search_inat", selected_site, "void")
     if(is.null(cached)){
+      message("... search INAT")
     occ <- ReLTER::get_site_speciesOccurrences(
       deimsid = paste0("https://deims.org/", selected_site),
       list_DS = "inat",
@@ -308,15 +314,16 @@ getBroker = function() {
   search_obis <- function() {
     cached <- readFromCache("search_obis", selected_site, "void")
     if(is.null(cached)){
-    occ <- ReLTER::get_site_speciesOccurrences(
-      deimsid = paste0("https://deims.org/", selected_site),
-      list_DS = "obis",
-      show_map = FALSE,
-      limit = 500
-    )
-    occ <- occ$obis
-    writeToCache(occ, "search_obis", selected_site, "void")
-    cached<-occ
+      message("... search OBIS")
+      occ <- ReLTER::get_site_speciesOccurrences(
+        deimsid = paste0("https://deims.org/", selected_site),
+        list_DS = "obis",
+        show_map = FALSE,
+        limit = 500
+      )
+      occ <- occ$obis
+      writeToCache(occ, "search_obis", selected_site, "void")
+      cached<-occ
     }
     return(cached)
   }
@@ -324,10 +331,11 @@ getBroker = function() {
   # TODO: ...
   
   # results OtherResData [cached] ----
-  getOtherResData <- function() {
+  getOtherStructuredDatasetResultListForGUI <- function() {
     
-    cached <- readFromCache("getOtherResData", selected_site, "void")
+    cached <- readFromCache("getOtherStructuredDatasetResultListForGUI", selected_site, "void")
     if (is.null(cached)) {
+      message("search other structured datasets from remote repositories")
       
       if (nrow(search_gbif()) == 500) {
         gbif_occ <- "more than 500"
@@ -382,7 +390,7 @@ getBroker = function() {
         dplyr::add_row(resultsINat) %>%
         dplyr::add_row(resultsOBIS)
       
-      writeToCache(results ,"getOtherResData", selected_site, "void")
+      writeToCache(results ,"getOtherStructuredDatasetResultListForGUI", selected_site, "void")
       cached<-results
     }
     return(cached)
@@ -588,14 +596,43 @@ getBroker = function() {
     # ...
     # set theDataset somewhere?
     # use that slot also to write the RDS when needed
+    if(!dim(getEVsDatasetResultList())[1]>=row_id) {
+      return(NULL)
+    }
+    datasetinfo = getEVsDatasetResultList() %>% .[row_id,]
+    # TODO: check field names in datasetinfo
+    theDataset <- readDataset(type=datasetinfo$type, 
+                              path=datasetinfo$path, 
+                              procedure=datasetinfo$procedure, 
+                              url=datasetinfo$url)
+    # tryCatch(
+    #   expr = {
+    #     if(datasetinfo$type=="SOS"){
+    #       message("returning SOS dataset")
+    #       theDataset <- ReLTER::get_sos_obs(sosURL = datasetinfo$url,
+    #                           procedure = datasetinfo$procedure)
+    #     }
+    #     if(datasetinfo$type=="raster"){
+    #       message("returning raster dataset")
+    #       theDataset <- raster::raster(x = datasetinfo$path2file)
+    #     }
+    #     if(datasetinfo$type=="rasterTS"){
+    #       message("returning rasterTS dataset")
+    #       theDataset <- raster::brick(x = datasetinfo$path2file)
+    #     }
+    #     if(datasetinfo$type=="shapefile"){
+    #       message("returning spatial feature dataset")
+    #       theDataset <- sf::st_read(dsn = datasetinfo$path2file)
+    #     }
+    #     if(datasetinfo$type=="csv"){
+    #       message("returning csv dataset")
+    #       theDataset <- readr::read_csv()
+    #     }
+    #   },
+    #   error=function(e){warning("something went wrong while reading EV dataset, returning NULL")}
+    # )
     
-    exampleTibble <- tibble::tibble(
-      id="1",
-      this = "is",
-      an = "example",
-      title = "the record 1"
-    )
-    return(exampleTibble)
+    return(theDataset)
   }
   
   # zenodo pangaea etc
@@ -626,16 +663,17 @@ getBroker = function() {
     "getSite" = getSite,
     "siteList" = siteList,
     "siteNames" = sites$name,
-    "getCurrentEVs" = getCurrentSiteAvailableEVs,
+    "getCurrentEVs" = getSelectedSiteAvailableEVs,
     "EVsList" = EVsList,
     "evNames" = EVs$name,
     "setEv" = setEv,
     "getEv" = getEv,
     "getInfo_Site" = info_site,
-    "getOtherResData" = getOtherResData, # table with number of records from OBIS, GBIF, INaturalist 
+    "getOtherResData" = getOtherStructuredDatasetResultListForGUI, # table with number of records from OBIS, GBIF, INaturalist 
     "getOtherRepoData" = getOtherRepoData,
-    "getEVsData" = getEVsData,
-    "getActualDataset_OtherRes" = getActualDataset_ObisGBifInat
+    "getEVsData" = getEVsDatasetResultListForGUI,
+    "getActualDataset_OtherRes" = getActualDataset_ObisGBifInat,
+    "getActualDataset_EVrelated" = getActualDataset_EVrelated
   )
   
   
@@ -693,6 +731,8 @@ if(FALSE){
   
   
   b$getCurrentEVs()
+  
+  # set ev
   b$setEv(b$getCurrentEVs()$id[1]) # select the first available EV for the selected site
   b$getSite()
   b$getEv()
@@ -700,6 +740,14 @@ if(FALSE){
   # alt name of site
   b$getSite() %>% dplyr::pull(alt_name)
   
+  b$setSite("9b1d144a-dc37-4b0e-8cda-1dda1d7667da")
+  b$setEv("4.2.1")
+  b$getEVsData()
+  b$getActualDataset_EVrelated(row_id = 1)
+  
   b$getActualDataset_OtherRes(1)
+  
+  b$getActualDataset_EVrelated(1)  
+  ITINERIS.EVsVRE:::datasets
   
 }

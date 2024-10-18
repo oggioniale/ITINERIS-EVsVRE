@@ -38,3 +38,79 @@ get_jj <- function(url, ...){
   jj <- httr2::resp_body_string(export)
   return(jj)
 }
+
+#' read dataset of different type
+#' @param type `character` one of "raster", "rasterTS", "shapefile", "SOS"
+#' @param path `character` for raster* and shapefile that path to the file
+#' @param procedure `character` for "SOS" type, the procedure id in the remote sos
+#' @param url `character` the sos endpoint url
+#' @return an R object with the data. It can be of class `tbl` (tibble), `sf`, `Raster`, `RasterBrick`
+#' @importFrom ReLTER get_sos_obs
+#' @importFrom raster raster brick
+#' @importFrom sf st_read
+#' @importFrom readr read_csv
+#' @export
+readDataset<-function(type, path=NULL, procedure=NULL, url=NULL){
+  
+  datasetinfo=list(type=type, path2file=path, procedure=procedure, url=NULL)
+  theDataset=NULL
+  tryCatch(
+    expr = 
+      {
+        if(datasetinfo$type=="SOS"){
+          message("returning SOS dataset")
+          theDataset <- ReLTER::get_sos_obs(sosURL = datasetinfo$url,
+                                            procedure = datasetinfo$procedure)
+        }
+        if(datasetinfo$type=="raster"){
+          message("returning raster dataset")
+          theDataset <- raster::raster(x = datasetinfo$path2file)
+        }
+        if(datasetinfo$type=="rasterTS"){
+          message("returning rasterTS dataset")
+          theDataset <- raster::brick(x = datasetinfo$path2file)
+        }
+        if(datasetinfo$type=="shapefile"){
+          message("returning spatial feature dataset")
+          theDataset <- sf::st_read(dsn = datasetinfo$path2file)
+        }
+        if(datasetinfo$type=="csv"){
+          message("returning csv dataset")
+          theDataset <- readr::read_csv(datasetinfo$path2file)
+        }
+      },
+    error=function(e){
+      warning("something went wrong while reading dataset, returning NULL")
+    })
+  return(theDataset)
+}
+
+rdsName<-function(name,rdsPath){
+  paste0(rdsPath, name, ".RDS")
+}
+
+#' save object as RDS file. File name defaults to variable name
+#' @param o R object to save
+#' @param rdsPath path to destination folder 
+#' @param name filename (defaults to variable name)
+#' @export
+saveObject<-function(o,rdsPath = "~/workspace/", 
+                     name = substitute(o)){
+  saveRDS(o,rdsName(name, rdsPath))
+}
+
+#' save object as RDS file. File name defaults to variable name
+#' @param info metadata info structured in a tibble
+#' @param path path to destination folder 
+#' @param name filename
+#' @noMd
+#' @noRd
+#' @note IN PROGRESS
+saveMetadata<-function(info, path = "~/workspace/", 
+                     name = "metadata"){
+  warning("TBD")
+}
+
+#' save dataset along with its metadata
+#' 
+
