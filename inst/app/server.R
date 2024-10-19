@@ -197,21 +197,21 @@ function(input, output, session) {
   #   
   # })
   # 
-  # observeEvent(input$tableOtherResData_cell_clicked, {
-  #   info <- input$tableOtherResData_cell_clicked
-  #   
-  #   message("selected row is", info$row)
-  #   if(! is.null(info) && !is.null(info$row) && info$row > 0 && info$row<=3 ){
-  #     # per assegnare al RV che contiene i dataset correntemente selezionati dall'utente nelle 3 tabelle di risultato
-  #     # theDataset$datasetRes<-broker$getActualDataset_OtherRes(info$row) 
-  #     # altrimenti prendere al volo dalla broker e assegnare a una variabile locale a questo observe event.
-  #     # come segue:
-  #     dataset <- broker$getActualDataset_OtherRes(info$row) 
-  #     theDataset$datasetRes <- dataset
-  #   }
-  #   #
-  # 
-  # })
+  observeEvent(input$tableOtherResData_cell_clicked, {
+    info <- input$tableOtherResData_cell_clicked
+
+    message("selected row is", info$row)
+    if(! is.null(info) && !is.null(info$row) && info$row > 0 && info$row<=3 ){
+      # per assegnare al RV che contiene i dataset correntemente selezionati dall'utente nelle 3 tabelle di risultato
+      # theDataset$datasetRes<-broker$getActualDataset_OtherRes(info$row)
+      # altrimenti prendere al volo dalla broker e assegnare a una variabile locale a questo observe event.
+      # come segue:
+      dataset <- broker$getActualDataset_OtherRes(info$row)
+      theDataset$datasetRes <- dataset
+    }
+    #
+
+  })
   
   observeEvent(input$tableOtherRepoData_cell_clicked, {
     # at the moment we do not do anything here.
@@ -276,10 +276,10 @@ function(input, output, session) {
   
   # TODO: unfix data
   output$map <- leaflet::renderLeaflet({
-    chla_map <- chla %>%
-      dplyr::select(foiLabel:lat) %>%
-      unique() %>%
-      sf::st_as_sf(coords = c("lat", "lon"), crs = 4326)
+    # chla_map <- chla %>%
+    #   dplyr::select(foiLabel:lat) %>%
+    #   unique() %>%
+    #   sf::st_as_sf(coords = c("lat", "lon"), crs = 4326)
     
     leaflet::leaflet() %>%
       leaflet::addProviderTiles(
@@ -287,110 +287,103 @@ function(input, output, session) {
         options = leaflet::providerTileOptions(opacity = 0.99)
       ) %>%
       leaflet::addMarkers(
-        data = chla_map,
-        popup = paste0(
-          "<b>Sensor name: </b>",
-          "<br>",
-          "<a href='",
-          chla_map$procedureID,
-          "' target='_blank'>",
-          chla_map$procedureName,
-          "</a>",
-          "<br>",
-          "<b>Sensor coordinates: </b>",
-          "<br>",
-          chla_map$geometry
-        )
+        data = theDataset$datasetRes
       )
   })
   
   # TODO: unfix data
   attributes(chla)$uri
   output$tbl <- DT::renderDT({
-    chla |>
-      dplyr::select(!(foiLabel:lat)) |>
-      DT::datatable(
-        escape = FALSE,
-        filter = 'top',
-        options = list(scrollX = TRUE),
-        colnames = colnames(chla %>% dplyr::select(!(foiLabel:lat))) %>% lapply(FUN=function(x){
-          if("units" %in% class(chla[[x]])) {
-            n = which(names(chla) == x)
-            sprintf(
-              "<a title='%s - %s' href='%s' target='_blank'>%s</a>",
-              units::deparse_unit(chla[[x]]),
-              attributes(chla)$uri[[n]],
-              attributes(chla)$uri[[n]],
-              x
-            )
-          } else x
-        })
-      )
+    theDataset$datasetRes %>%
+    DT::datatable(
+      escape = FALSE,
+      filter = 'top',
+      options = list(scrollX = TRUE)
+    )
+    # chla |>
+    #   dplyr::select(!(foiLabel:lat)) |>
+    #   DT::datatable(
+    #     escape = FALSE,
+    #     filter = 'top',
+    #     options = list(scrollX = TRUE),
+    #     colnames = colnames(chla %>% dplyr::select(!(foiLabel:lat))) %>% lapply(FUN=function(x){
+    #       if("units" %in% class(chla[[x]])) {
+    #         n = which(names(chla) == x)
+    #         sprintf(
+    #           "<a title='%s - %s' href='%s' target='_blank'>%s</a>",
+    #           units::deparse_unit(chla[[x]]),
+    #           attributes(chla)$uri[[n]],
+    #           attributes(chla)$uri[[n]],
+    #           x
+    #         )
+    #       } else x
+    #     })
+    #   )
   }, server = FALSE)
   
   # TODO: unfix data
-  output$plot <- plotly::renderPlotly({
-    chla |>
-      dplyr::select(!(foiLabel:lat)) |>
-      plotly::plot_ly(
-        type = 'scatter',
-        mode = 'lines'
-      ) %>%
-      plotly::add_trace(
-        y = ~Maximum_depth_below_surface_of_the_water_body,
-        x = ~chla_fluorescence_component,
-        name = paste0('Chlorophyll a [', units::deparse_unit(chla$chla_fluorescence_component), "]")
-      ) %>%
-      plotly::add_trace(
-        y = ~Maximum_depth_below_surface_of_the_water_body,
-        x = ~green_algae_chla_fluorescence_component,
-        name = paste0('Green algae [', units::deparse_unit(chla$green_algae_chla_fluorescence_component), "]")
-      ) %>%
-      plotly::add_trace(
-        y = ~Maximum_depth_below_surface_of_the_water_body,
-        x = ~bluegreen_algae_chla_fluorescence_component,
-        name = paste0('Blue-Green algae [', units::deparse_unit(chla$bluegreen_algae_chla_fluorescence_component), "]")
-      ) %>%
-      plotly::add_trace(
-        y = ~Maximum_depth_below_surface_of_the_water_body,
-        x = ~diatom_algae_chla_fluorescence_component,
-        name = paste0('Diatom algae [', units::deparse_unit(chla$diatom_algae_chla_fluorescence_component), "]")
-      ) %>%
-      plotly::add_trace(
-        y = ~Maximum_depth_below_surface_of_the_water_body,
-        x = ~crypto_algae_chla_fluorescence_component,
-        name = paste0('Crypto algae [', units::deparse_unit(chla$crypto_algae_chla_fluorescence_component), "]")
-      ) %>%
-      plotly::add_trace(
-        y = ~Maximum_depth_below_surface_of_the_water_body,
-        x = ~Concentration_of_organic_matter_in_water_bodies,
-        name = 'Organic matter'
-      ) %>%
-      plotly::add_trace(
-        y = ~Maximum_depth_below_surface_of_the_water_body,
-        x = ~water_temp,
-        xaxis = "x2",
-        name = paste0('Water temperature [', units::deparse_unit(chla$water_temp), "]")
-      ) %>%
-      plotly::layout(
-        yaxis = list(
-          autorange = "reversed",
-          title = paste0(
-            'Maximum depth below surface of the water body [',
-            units::deparse_unit(chla$Maximum_depth_below_surface_of_the_water_body),
-            ']'
-          )
-        ),
-        xaxis = list(
-          title = paste0('Chla fluorescence component [', units::deparse_unit(chla$chla_fluorescence_component), ']')
-        ),
-        xaxis2 = list(
-          overlaying = "x",
-          anchor = "y",
-          side = "top",
-          showticklabels = TRUE,
-          title = paste0('temperature [', units::deparse_unit(chla$water_temp), ']')
-        )
-      )
-  })
+  # output$plot <- plotly::renderPlotly({
+  #   chla |>
+  #     dplyr::select(!(foiLabel:lat)) |>
+  #     plotly::plot_ly(
+  #       type = 'scatter',
+  #       mode = 'lines'
+  #     ) %>%
+  #     plotly::add_trace(
+  #       y = ~Maximum_depth_below_surface_of_the_water_body,
+  #       x = ~chla_fluorescence_component,
+  #       name = paste0('Chlorophyll a [', units::deparse_unit(chla$chla_fluorescence_component), "]")
+  #     ) %>%
+  #     plotly::add_trace(
+  #       y = ~Maximum_depth_below_surface_of_the_water_body,
+  #       x = ~green_algae_chla_fluorescence_component,
+  #       name = paste0('Green algae [', units::deparse_unit(chla$green_algae_chla_fluorescence_component), "]")
+  #     ) %>%
+  #     plotly::add_trace(
+  #       y = ~Maximum_depth_below_surface_of_the_water_body,
+  #       x = ~bluegreen_algae_chla_fluorescence_component,
+  #       name = paste0('Blue-Green algae [', units::deparse_unit(chla$bluegreen_algae_chla_fluorescence_component), "]")
+  #     ) %>%
+  #     plotly::add_trace(
+  #       y = ~Maximum_depth_below_surface_of_the_water_body,
+  #       x = ~diatom_algae_chla_fluorescence_component,
+  #       name = paste0('Diatom algae [', units::deparse_unit(chla$diatom_algae_chla_fluorescence_component), "]")
+  #     ) %>%
+  #     plotly::add_trace(
+  #       y = ~Maximum_depth_below_surface_of_the_water_body,
+  #       x = ~crypto_algae_chla_fluorescence_component,
+  #       name = paste0('Crypto algae [', units::deparse_unit(chla$crypto_algae_chla_fluorescence_component), "]")
+  #     ) %>%
+  #     plotly::add_trace(
+  #       y = ~Maximum_depth_below_surface_of_the_water_body,
+  #       x = ~Concentration_of_organic_matter_in_water_bodies,
+  #       name = 'Organic matter'
+  #     ) %>%
+  #     plotly::add_trace(
+  #       y = ~Maximum_depth_below_surface_of_the_water_body,
+  #       x = ~water_temp,
+  #       xaxis = "x2",
+  #       name = paste0('Water temperature [', units::deparse_unit(chla$water_temp), "]")
+  #     ) %>%
+  #     plotly::layout(
+  #       yaxis = list(
+  #         autorange = "reversed",
+  #         title = paste0(
+  #           'Maximum depth below surface of the water body [',
+  #           units::deparse_unit(chla$Maximum_depth_below_surface_of_the_water_body),
+  #           ']'
+  #         )
+  #       ),
+  #       xaxis = list(
+  #         title = paste0('Chla fluorescence component [', units::deparse_unit(chla$chla_fluorescence_component), ']')
+  #       ),
+  #       xaxis2 = list(
+  #         overlaying = "x",
+  #         anchor = "y",
+  #         side = "top",
+  #         showticklabels = TRUE,
+  #         title = paste0('temperature [', units::deparse_unit(chla$water_temp), ']')
+  #       )
+  #     )
+  # })
 }

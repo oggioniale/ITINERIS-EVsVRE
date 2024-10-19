@@ -143,14 +143,14 @@ fluidPage(
             )
           ),
           # -- START REMOVE THIS AFTER DEVELOPMENT
-          fluidRow(
-            box(
-              width = 12,
-              title="debug info",
-              status="info",
-              shiny::textOutput("debug")
-            )  
-          ),
+          # fluidRow(
+          #   box(
+          #     width = 12,
+          #     title="debug info",
+          #     status="info",
+          #     shiny::textOutput("debug")
+          #   )  
+          # ),
           # -- END REMOVE THIS AFTER DEVELOPMENT
           fluidRow(
             box(
