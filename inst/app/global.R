@@ -1,6 +1,6 @@
 #source("broker.R")
 
-broker<-getBroker()
+# broker<-getBroker()
 # meglio qui o nel broker/controller?
 
 # DONE: convert these lists into tbl with columns "deimsid", "name", "domain", "active"
@@ -10,6 +10,7 @@ broker<-getBroker()
 # sites_list <- list(
 #   "Lago Maggiore - Italy" = "https://deims.org/f30007c4-8a6e-4f11-ab87-569db54638fe",
 #   "Delta del Po e Costa Romagnola - Italy" = "https://deims.org/6869436a-80f4-4c6d-954b-a730b348d7ce"
+#   "Collelongo-Selva Piana - Italy" = "https://deims.org/9b1d144a-dc37-4b0e-8cda-1dda1d7667da"
 # )
 
 # DONE: convert into tbl.
