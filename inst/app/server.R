@@ -48,6 +48,17 @@ function(input, output, session) {
     return(0)
   })
   
+  # return a list
+  currentDatasetMetadata <- reactive({
+    seltab<-theSelectedTab()
+    if(seltab==1)
+      return(theDataset$datasetEv$metadata)
+    if(seltab==2)
+      return(theDataset$datasetRes$metadata)
+    # if(seltab==4)
+    #   return(theDataset$datasetOther)
+  })
+  
   currentDataset <- reactive({
     # according to the selected tab, the current dataset is one of the three slots
     # of the RV theDataset. The following expression returns the right one.
@@ -56,16 +67,44 @@ function(input, output, session) {
     if(seltab==1)
       return(theDataset$datasetEv$dataset)
     if(seltab==2)
-      return(theDataset$datasetRes)
+      return(theDataset$datasetRes$dataset)
     if(seltab==4)
       return(theDataset$datasetOther)
     #nameDatasetForTheSelectedTab<-names(theDataset)[theSelectedTab()]
     #theDataset[[nameDatasetForTheSelectedTab]]
   })
   
+  # show/hide elements according to reactive condition
+  observe({
+    # TODO: check if it is currently possible to hide the tab box
+    # 
+    # if(is.null(currentDataset()))
+    #   hideTab(inputId = "datasetLists", target = "table", session = session)
+    # else
+    #   showTab(inputId = "datasetLists", target = "table", session = session)
+    
+    shinyjs::toggle(id = "saveDataset", condition = !is.null(currentDataset()))
+    updateTextInput(inputId = "saveCurrentDatasetName",
+                    value = fname<-stringr::str_replace_all(currentDatasetMetadata()$datasetname, " ", "_")
+    )
+  })
+  
+  observeEvent(input$stopApp,{
+    stopApp()
+  })
+  observeEvent(input$saveCurrentDataset,{
+    message("saving dataset")
+    res<-saveDataset(datasetfilename = input$saveCurrentDatasetName,
+                dataset = currentDataset(),
+                metadataList = currentDatasetMetadata()
+                )
+    session$sendCustomMessage(type = 'testmessage',
+                              message = res)
+  })
+  
+  
   currentDatasetType<-reactive({
     # here we examine the dataset type and the geometry type
-    
     getDatasetObjectTechInfo(currentDataset())
   })
   
@@ -74,23 +113,32 @@ function(input, output, session) {
     return(1)
   })
   
-  
-  # theDatasetEV <- reactive({
-  #   theDataset$datasetEv
-  # })
-  # 
-  # theDatasetRes <- reactive({
-  #   theDataset$datasetRes
-  # })
-  # 
-  # theDatasetOther <- reactive({
-  #   theDataset$datasetOther
-  # })
-  
+  # SHOW METADATA
+  output$selectedDatasetMD<-DT::renderDataTable({
+    DT::datatable(data = currentDatasetMetadata() %>% 
+                    dplyr::as_tibble() %>% 
+                    t(),
+      escape = FALSE,
+      selection = "single",
+      caption = htmltools::tags$caption(
+        style = 'text-align: center;',
+        htmltools::h3(paste0(
+          'Dataset metadata'
+        ))
+      ),
+      filter = 'top'
+    )
+  })
   # -- START REMOVE THIS AFTER DEVELOPMENT
   output$debug <- renderText({
     #currentDataset()
-    print(currentDatasetType())
+    #print(currentDatasetType())
+    #result <- jsonlite::prettify(jsonlite::toJSON(currentDatasetMetadata(), 
+     #                                             auto_unbox = TRUE), 4)
+    #result<-x$metadata %>% dplyr::as_tibble() %>% t()
+    #result <- jqr::jq(jsonlite::toJSON(currentDatasetMetadata(), auto_unbox = TRUE))
+    
+    #return(result)
     # browser()
     
     # cat(paste("selected tab is #", input$resultsTabContainer))
@@ -107,7 +155,7 @@ function(input, output, session) {
     # cat('\n\nAll rows:\n\n')
     # cat(input$tableOtherResData_rows_all, sep = ', ')
     # cat('\n\nSelected rows:\n\n')
-    print(input$tableOtherResData_rows_selected)
+    #print(input$tableOtherResData_rows_selected)
     # 
     # cat('\nRows on the current current EVsData table:\n\n')
     # cat(input$tableOtherRepoData_rows_current, sep = ', ')
@@ -178,7 +226,9 @@ function(input, output, session) {
     # load and present site info in panel
     output$siteinfo <- renderUI(tagList(
       a(x$val_title, href=x$val_uri, target="_blank"),
-      div(renderTable(x$tbl_generalInfo %>% as_tibble() %>% select(geoBonBiome, biogeographicalRegion) %>% tidyr::unnest(cols=c("geoBonBiome"))))#,
+      div(renderTable(x$tbl_generalInfo %>% dplyr::as_tibble() %>% 
+                        dplyr::select(geoBonBiome, biogeographicalRegion) %>% 
+                        tidyr::unnest(cols=c("geoBonBiome"))))#,
       # p("Yearly avg precipitation: ", x$val_precipitation, "[", units::deparse_unit(x$val_precipitation), "]"),
       # p("Biome", x$val_geoBonBiome),
       # p("Biogeographical Region:", x$val_biogeographicalRegion),
@@ -204,8 +254,8 @@ function(input, output, session) {
     #withProgress(message="fetching data", {
     x<-broker$getEv()
     datasets$tblEVsData <- broker$getEVsData()
-    datasets$tblOtherResData <- broker$getOtherResData()
-    datasets$tblOtherRepoData <- broker$getOtherRepoData()
+    # datasets$tblOtherResData <- broker$getOtherResData()
+    # datasets$tblOtherRepoData <- broker$getOtherRepoData()
     #})
     shinybusy::remove_modal_spinner()
     #browser()
@@ -295,15 +345,18 @@ function(input, output, session) {
   
   # events on result lists (dataset selection)
   observeEvent(input$tableEVsData_cell_clicked, {
+    shinybusy::show_modal_spinner(text="loading dataset...please wait")
     info <- input$tableEVsData_cell_clicked
     selectedRows <- input$tableEVsData_rows_selected
     message("selected row is", info$row)
     if(any(selectedRows>0) && ! is.null(info) && !is.null(info$row) && info$row > 0 && info$row<=3 ){
+      #getEVsDatasetResultList() %>% .[row_id,]
       dataset <- broker$getActualDataset_EVrelated(info$row)
       theDataset$datasetEv <- dataset
     } else {
       theDataset$datasetEv <- NULL
     }
+    shinybusy::remove_modal_spinner()
 
   })
 
@@ -346,13 +399,14 @@ function(input, output, session) {
   
   # Visualization box ----
   # TODO: unfix data
-  chla <- ReLTER::get_sos_obs(
-    sosURL = "http://getit.lteritalia.it/observations/service",
-    procedure = "http://www.get-it.it/sensors/getit.lteritalia.it/procedure/noOwnerDeclared/noModelDeclared/noSerialNumberDeclared/1286194C-A5DF-11DF-8ED7-1602DFD72097",
-    foi = c("http://www.get-it.it/sensors/getit.lteritalia.it/sensors/foi/SSF/SP/4326/45.9547/8.63403"),
-    show_map = FALSE
-  ) %>% dplyr::slice(1:55)
-  
+  # if(F){
+  # chla <- ReLTER::get_sos_obs(
+  #   sosURL = "http://getit.lteritalia.it/observations/service",
+  #   procedure = "http://www.get-it.it/sensors/getit.lteritalia.it/procedure/noOwnerDeclared/noModelDeclared/noSerialNumberDeclared/1286194C-A5DF-11DF-8ED7-1602DFD72097",
+  #   foi = c("http://www.get-it.it/sensors/getit.lteritalia.it/sensors/foi/SSF/SP/4326/45.9547/8.63403"),
+  #   show_map = FALSE
+  # ) %>% dplyr::slice(1:55)
+  # }
   # shared_data <- SharedData$new(
   #   sf::st_as_sf(
   #     chla,
