@@ -5,13 +5,9 @@ library(crosstalk) #
 
 # Define server logic required to draw a histogram
 function(input, output, session) {
+  broker<-getBroker()
   
-  # status (Reactive Values "object" to store current status)
-  status <- reactiveValues(
-    selectedSite = '',
-    selectedEv = NULL,
-    site_info = NULL
-  )
+  
   
   # Tables box ----
   # TODO: unfix data
@@ -20,6 +16,13 @@ function(input, output, session) {
     url = NA,
     title = NA,
     resources = NA
+  )
+  
+  # status (Reactive Values "object" to store current status)
+  status <- reactiveValues(
+    selectedSite = '',
+    selectedEv = NULL,
+    selectedSiteInfo = NULL
   )
   
   # TODO: unfix data
@@ -37,6 +40,90 @@ function(input, output, session) {
     datasetOther = NULL
   )
   
+  theSelectedTab <- reactive({
+    tabs<-c("EVs","OtherRes","OtherRepo")
+    res<-which(tabs==input$resultsTabContainer)
+    if(length(res)>0)
+      return(res)
+    return(0)
+  })
+  
+  currentDataset <- reactive({
+    # according to the selected tab, the current dataset is one of the three slots
+    # of the RV theDataset. The following expression returns the right one.
+    
+    seltab<-theSelectedTab()
+    if(seltab==1)
+      return(theDataset$datasetEv$dataset)
+    if(seltab==2)
+      return(theDataset$datasetRes)
+    if(seltab==4)
+      return(theDataset$datasetOther)
+    #nameDatasetForTheSelectedTab<-names(theDataset)[theSelectedTab()]
+    #theDataset[[nameDatasetForTheSelectedTab]]
+  })
+  
+  currentDatasetType<-reactive({
+    # here we examine the dataset type and the geometry type
+    
+    getDatasetObjectTechInfo(currentDataset())
+  })
+  
+  # TODO: add a slider to control time for rasterTS
+  rasterTSLayer<-reactive({
+    return(1)
+  })
+  
+  
+  # theDatasetEV <- reactive({
+  #   theDataset$datasetEv
+  # })
+  # 
+  # theDatasetRes <- reactive({
+  #   theDataset$datasetRes
+  # })
+  # 
+  # theDatasetOther <- reactive({
+  #   theDataset$datasetOther
+  # })
+  
+  # -- START REMOVE THIS AFTER DEVELOPMENT
+  output$debug <- renderText({
+    #currentDataset()
+    print(currentDatasetType())
+    # browser()
+    
+    # cat(paste("selected tab is #", input$resultsTabContainer))
+    # 
+    # cat('<br>\nRows on the current current EVsData table:\n\n')
+    # cat(input$tableEVsData_rows_current, sep = ', ')
+    # cat('\n\nAll rows:\n\n')
+    # cat(input$tableEVsData_rows_all, sep = ', ')
+    # cat('\n\nSelected rows:\n\n')
+    # cat(input$tableEVsData_rows_selected, sep = ', ')
+    # 
+    # cat('\nRows on the current current EVsData table:\n\n')
+    # cat(input$tableOtherResData_rows_current, sep = ', ')
+    # cat('\n\nAll rows:\n\n')
+    # cat(input$tableOtherResData_rows_all, sep = ', ')
+    # cat('\n\nSelected rows:\n\n')
+    print(input$tableOtherResData_rows_selected)
+    # 
+    # cat('\nRows on the current current EVsData table:\n\n')
+    # cat(input$tableOtherRepoData_rows_current, sep = ', ')
+    # cat('\n\nAll rows:\n\n')
+    # cat(input$tableOtherRepoData_rows_all, sep = ', ')
+    # cat('\n\nSelected rows:\n\n')
+    # cat(input$tableOtherRepoData_rows_selected, sep = ', ')
+    
+    # cat('<br>user selected EV dataset of class')
+    # cat(class(theDataset$datasetEV ))
+    # 
+    # cat('<br>user selected Other res dataset of class')
+    # cat(class(theDataset$datasetRes ))
+  })
+  # -- END REMOVE THIS AFTER DEVELOPMENT
+  
   observeEvent(input$site, {
     message("ev site$ev:", input$site)
     status$selectedSite <- input$site
@@ -52,23 +139,37 @@ function(input, output, session) {
     broker$setSite(status$selectedSite)
     status$selectedEv=NULL#broker$EVsList()[1]
     
+    
+    
+    # reset theDataset slots
+    theDataset$datasetEv = NULL
+    theDataset$datasetRes = NULL
+    theDataset$datasetOther = NULL
+    
+    # reset tbl selection
+    # tpr<-DT::dataTableProxy("tableOtherRepoData",session = session)
+    DT::selectRows(DT::dataTableProxy("tableEVsData",session = session), NULL)
+    DT::selectRows(DT::dataTableProxy("tableOtherResData",session = session), NULL)
+    DT::selectRows(DT::dataTableProxy("tableOtherRepoData",session = session), NULL)
+    
+    
     freezeReactiveValue(input, "ev")
     updateSelectizeInput(
       session,
       "ev",
-      choices = NULL,
+    choices = broker$EVsList(),
       server = TRUE,
       selected = NULL
     )
-    updateSelectizeInput(
-      session,
-      "ev",
-      choices = broker$EVsList(),
-      server = TRUE,
-      selected = ""
-    )
+    # updateSelectizeInput(
+    #   session,
+    #   "ev",
+    #   choices = broker$EVsList(),
+    #   server = TRUE,
+    #   selected = "<select one>"
+    # )
     
-    shinybusy::show_modal_spinner(text="fetching data")
+    shinybusy::show_modal_spinner(text="fetching site data")
     #withProgress(message="fetching data", {
     x<-broker$getInfo_Site() # first call requires some time.
     # TODO: add a "progress" to notify this is loading
@@ -77,12 +178,18 @@ function(input, output, session) {
     # load and present site info in panel
     output$siteinfo <- renderUI(tagList(
       a(x$val_title, href=x$val_uri, target="_blank"),
-      div(renderTable(t(x$tbl_generalInfo %>% dplyr::as_data_frame())))#,
+      div(renderTable(x$tbl_generalInfo %>% as_tibble() %>% select(geoBonBiome, biogeographicalRegion) %>% tidyr::unnest(cols=c("geoBonBiome"))))#,
       # p("Yearly avg precipitation: ", x$val_precipitation, "[", units::deparse_unit(x$val_precipitation), "]"),
       # p("Biome", x$val_geoBonBiome),
       # p("Biogeographical Region:", x$val_biogeographicalRegion),
       # div("habitats within the site", class="scroll", renderTable(x$tbl_eunisHabitats, striped = T, colnames = F))
     ))
+    status$selectedSiteInfo<-x
+    
+    shinybusy::show_modal_spinner(text="fetching data")
+    datasets$tblOtherResData <- broker$getOtherResData()
+    datasets$tblOtherRepoData <- broker$getOtherRepoData()
+    shinybusy::remove_modal_spinner()
     
   })
   
@@ -93,7 +200,7 @@ function(input, output, session) {
     message(status$selectedEv)
     
     # load and present ev info in panel
-    shinybusy::show_modal_spinner(text="fetching data")
+    shinybusy::show_modal_spinner(text="fetching EVs data")
     #withProgress(message="fetching data", {
     x<-broker$getEv()
     datasets$tblEVsData <- broker$getEVsData()
@@ -109,10 +216,10 @@ function(input, output, session) {
     ))
   })
   
-  # set the numbers in infoboxes
-  observeEvent(datasets$tblOtherRepoData, {
-    
-  })
+  # # set the numbers in infoboxes
+  # observeEvent(datasets$tblOtherRepoData, {
+  #   
+  # })
   
   output$info_box_EVsData <- renderUI({
     infoBox(
@@ -186,29 +293,38 @@ function(input, output, session) {
     )
   })
   
-  # # events on result lists (dataset selection)
-  # observeEvent(input$tableEVsData_cell_clicked, {
-  #   info <- input$tableEVsData_cell_clicked
-  #   message("selected row is", info$row)
-  #   if(! is.null(info) && !is.null(info$row) && info$row > 0 && info$row<=3 ){
-  #     dataset <- broker$getActualDataset_EVrelated(info$row)
-  #     theDataset$datasetEv <- dataset
-  #   }
-  #   
-  # })
-  # 
+  # events on result lists (dataset selection)
+  observeEvent(input$tableEVsData_cell_clicked, {
+    info <- input$tableEVsData_cell_clicked
+    selectedRows <- input$tableEVsData_rows_selected
+    message("selected row is", info$row)
+    if(any(selectedRows>0) && ! is.null(info) && !is.null(info$row) && info$row > 0 && info$row<=3 ){
+      dataset <- broker$getActualDataset_EVrelated(info$row)
+      theDataset$datasetEv <- dataset
+    } else {
+      theDataset$datasetEv <- NULL
+    }
+
+  })
+
   observeEvent(input$tableOtherResData_cell_clicked, {
     info <- input$tableOtherResData_cell_clicked
-
+    proxy<-DT::dataTableProxy("tableOtherResData")
+    selectedRows <- input$tableOtherResData_rows_selected
+    
     message("selected row is", info$row)
-    if(! is.null(info) && !is.null(info$row) && info$row > 0 && info$row<=3 ){
+    if(any(selectedRows>0) && ! is.null(info) && !is.null(info$row) && info$row > 0 && info$row<=3 ){
       # per assegnare al RV che contiene i dataset correntemente selezionati dall'utente nelle 3 tabelle di risultato
       # theDataset$datasetRes<-broker$getActualDataset_OtherRes(info$row)
       # altrimenti prendere al volo dalla broker e assegnare a una variabile locale a questo observe event.
       # come segue:
       dataset <- broker$getActualDataset_OtherRes(info$row)
+      message("assign datasetRes")
       theDataset$datasetRes <- dataset
+    } else {
+      theDataset$datasetRes <- NULL
     }
+    
     #
 
   })
@@ -225,36 +341,7 @@ function(input, output, session) {
     #
   })
   
-  # -- START REMOVE THIS AFTER DEVELOPMENT
-  output$debug <- renderPrint({
-    cat('\nRows on the current current EVsData table:\n\n')
-    cat(input$tableEVsData_rows_current, sep = ', ')
-    cat('\n\nAll rows:\n\n')
-    cat(input$tableEVsData_rows_all, sep = ', ')
-    cat('\n\nSelected rows:\n\n')
-    cat(input$tableEVsData_rows_selected, sep = ', ')
-    
-    cat('\nRows on the current current EVsData table:\n\n')
-    cat(input$tableOtherResData_rows_current, sep = ', ')
-    cat('\n\nAll rows:\n\n')
-    cat(input$tableOtherResData_rows_all, sep = ', ')
-    cat('\n\nSelected rows:\n\n')
-    cat(input$tableOtherResData_rows_selected, sep = ', ')
-    
-    cat('\nRows on the current current EVsData table:\n\n')
-    cat(input$tableOtherRepoData_rows_current, sep = ', ')
-    cat('\n\nAll rows:\n\n')
-    cat(input$tableOtherRepoData_rows_all, sep = ', ')
-    cat('\n\nSelected rows:\n\n')
-    cat(input$tableOtherRepoData_rows_selected, sep = ', ')
-    
-    # cat('<br>user selected EV dataset of class')
-    # cat(class(theDataset$datasetEV ))
-    # 
-    # cat('<br>user selected Other res dataset of class')
-    # cat(class(theDataset$datasetRes ))
-  })
-  # -- END REMOVE THIS AFTER DEVELOPMENT
+  
   
   
   # Visualization box ----
@@ -274,32 +361,60 @@ function(input, output, session) {
   #   )
   # )
   
-  # TODO: unfix data
+  # TODO: adapt also to EV datasets
   output$map <- leaflet::renderLeaflet({
+    
+    
     # chla_map <- chla %>%
     #   dplyr::select(foiLabel:lat) %>%
     #   unique() %>%
     #   sf::st_as_sf(coords = c("lat", "lon"), crs = 4326)
     
-    leaflet::leaflet() %>%
+    l<-leaflet::leaflet() %>%
       leaflet::addProviderTiles(
         "CartoDB.Positron",
         options = leaflet::providerTileOptions(opacity = 0.99)
-      ) %>%
-      leaflet::addMarkers(
-        data = theDataset$datasetRes
       )
+    
+    # add site polygon as polylines
+    l <- l %>% leaflet::addPolylines(data=status$selectedSiteInfo$geometry)
+    
+    # switch leaflet method on sf + type (points etc) , raster + type (single or mmultiple layers)
+    typ<-currentDatasetType()
+    
+    if("vector" %in% typ$datasetType){
+      
+      # warning(typ$vectorType)
+      
+      if(typ$vectorType == "POINT")
+        l <- l %>% leaflet::addMarkers(data = currentDataset())
+      if(typ$vectorType == "POLYGON")
+        l <- l %>% leaflet::addPolygons(data=currentDataset())
+    }
+    if("raster" %in% typ$datasetType){
+      l <- l %>% leaflet::addRasterImage(x=currentDataset(), opacity=.8)
+    }
+    if("rasterTS" %in% typ$datasetType){
+      l <- l %>% leaflet::addRasterImage(x=currentDataset()[[rasterTSLayer()]], opacity=.8)
+    }
+    l
+    
   })
   
-  # TODO: unfix data
-  attributes(chla)$uri
+  # TODO: adapt also to EV datasets
+  #attributes(chla)$uri
   output$tbl <- DT::renderDT({
-    theDataset$datasetRes %>%
-    DT::datatable(
-      escape = FALSE,
-      filter = 'top',
-      options = list(scrollX = TRUE)
-    )
+    res=NULL
+    
+    if("data.frame" %in% currentDatasetType()$datasetType){
+      res<-DT::datatable(
+              data = currentDataset(),
+              escape = FALSE,
+              filter = 'top',
+              options = list(scrollX = TRUE)
+            )
+    }
+    return(res)
     # chla |>
     #   dplyr::select(!(foiLabel:lat)) |>
     #   DT::datatable(

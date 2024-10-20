@@ -209,7 +209,7 @@ getBroker = function() {
       res1 <- ReLTER::get_site_info(
         deimsid = paste0("https://deims.org/", selected_site),
         category = c(
-          #"Boundaries",
+          "Boundaries",
           "EnvCharacts",
           #"Affiliations",
           #"observedProperties",
@@ -217,7 +217,7 @@ getBroker = function() {
           #"Infrastructure"
         )
       )
-      
+      res$geometry <- res1$geometry
       res$tbl_generalInfo <- res1 %>%
         dplyr::select(geoBonBiome,
                       biogeographicalRegion#,
@@ -616,12 +616,21 @@ getBroker = function() {
     if(!dim(getEVsDatasetResultList())[1]>=row_id) {
       return(NULL)
     }
-    datasetinfo = getEVsDatasetResultList() %>% .[row_id,]
+    datasetInfo = getEVsDatasetResultList() %>% .[row_id,]
+
     # TODO: check field names in datasetinfo
-    theDataset <- readDataset(type=datasetinfo$type, 
-                              path=datasetinfo$path, 
-                              procedure=datasetinfo$procedure, 
-                              url=datasetinfo$url)
+    x <- readDataset(type=datasetInfo$type, 
+                              path=datasetInfo$path2file, 
+                              procedure=datasetInfo$procedure, 
+                              url=datasetInfo$url)
+
+    # s stand for "structure". It is a list with the actual data
+    # plus dataset metadata
+    
+    res=list(
+      dataset = x,
+      metadata=datasetInfo
+      )
     # tryCatch(
     #   expr = {
     #     if(datasetinfo$type=="SOS"){
@@ -649,7 +658,7 @@ getBroker = function() {
     #   error=function(e){warning("something went wrong while reading EV dataset, returning NULL")}
     # )
     
-    return(theDataset)
+    return(res)
   }
   
   # zenodo pangaea etc
@@ -739,13 +748,29 @@ if(FALSE){
   b <- getBroker()
   deimsUUID = "f30007c4-8a6e-4f11-ab87-569db54638fe"
   collelongo="9b1d144a-dc37-4b0e-8cda-1dda1d7667da"
+  
+  b$setSite(collelongo)
+  b$setEv(b$getCurrentEVs()$id[1])
+  x<-b$getActualDataset_EVrelated(1)
+
+
+  
   b$setSite(deimsUUID)
   b$getSite()
-  b$getInfo_Site() # the first call for a given site takes more time, result is then cached and quickly accessible
+  infoSite<-b$getInfo_Site() # the first call for a given site takes more time, result is then cached and quickly accessible
+  infoSite$tbl_eunisHabitats
+  
+  infoSite$tbl_generalInfo %>% as_tibble() %>% tidyr::unnest(cols=c("geoBonBiome"))
+  
+  b$setSite(collelongo)
+  infoSite<-b$getInfo_Site()
+  infoSite$tbl_generalInfo$geoBonBiome
   
   b$setSite(b$siteList()[2])
+  
   b$getSite()
-  b$getInfo_Site()
+  
+  b$getInfo_Site()$tbl_generalInfo$geoBonBiome[[1]]
   
   
   b$getCurrentEVs()
@@ -760,6 +785,7 @@ if(FALSE){
   
   b$setSite("9b1d144a-dc37-4b0e-8cda-1dda1d7667da") #collelongo
   b$setEv("4.2.1")
+  b$getInfo_Site()
   b$getEVsData()
   b$getActualDataset_EVrelated(row_id = 1)
   

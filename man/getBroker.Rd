@@ -28,9 +28,9 @@ getEv: return the currently selected EV record as a tibble with one row
 
 getInfo_Site:
 
-getOtherResData:
-getOtherRepoData:
-getEVsData:
+getOtherResData: list of structured dataset in the selected site boundary (e.g. GBIF observation records)
+getOtherRepoData: list of dataset in the selected site boundary from other "generic" repositories (e.g. Zenodo). The datasets does not follow specific schema.
+getEVsData: list of dataset related to the selected site and the selected EV. These are specifically identified by the work of EV-VRE team.
 }
 \author{
 Paolo Tagliolato (ptagliolato)

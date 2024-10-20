@@ -91,7 +91,10 @@ fluidPage(
                 inputId = "site",
                 label = HTML("select site"),
                 multiple = FALSE,
-                choices = broker$siteList(),
+                choices = ITINERIS.EVsVRE:::sites$deimsUUID %>%
+                  magrittr::set_names(
+                    ITINERIS.EVsVRE:::sites$name
+                  ),#,#broker$siteList(),
                 selected = NULL
               ),
               uiOutput("siteinfo")
@@ -108,7 +111,7 @@ fluidPage(
                 inputId = "ev",
                 label = HTML("select EV"),
                 multiple = FALSE,
-                choices = broker$EVsList(),
+                choices = list("<select one>"=""),#broker$EVsList(),
                 selected = NULL
               ),
               uiOutput("EVinfo")
@@ -125,32 +128,36 @@ fluidPage(
               uiOutput("info_box_OtherResData"),
               uiOutput("info_box_OtherRepoData"),
               tabBox(
+                id="resultsTabContainer",
                 width = 12,
-                selected = "Concerning selected EVs",
+                selected = "EVs",
                 tabPanel(
                   "Concerning selected EVs",
+                  value="EVs",
                   DT::dataTableOutput("tableEVsData")
                 ),
                 tabPanel(
                   "Relating to the selected site (structured)",
+                  value="OtherRes",
                   DT::dataTableOutput("tableOtherResData")
                 ),
                 tabPanel(
                   "Relating to the selected site (unstructured)",
+                  value="OtherRepo",
                   DT::dataTableOutput("tableOtherRepoData")
                 )
               )
             )
           ),
           # -- START REMOVE THIS AFTER DEVELOPMENT
-          # fluidRow(
-          #   box(
-          #     width = 12,
-          #     title="debug info",
-          #     status="info",
-          #     shiny::textOutput("debug")
-          #   )  
-          # ),
+          fluidRow(
+            box(
+              width = 12,
+              title="debug info",
+              status="info",
+              shiny::textOutput("debug")
+            )
+          ),
           # -- END REMOVE THIS AFTER DEVELOPMENT
           fluidRow(
             box(

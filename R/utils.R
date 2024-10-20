@@ -48,41 +48,94 @@ get_jj <- function(url, ...){
 #' @importFrom ReLTER get_sos_obs
 #' @importFrom raster raster brick
 #' @importFrom sf st_read
-#' @importFrom readr read_csv
+#' @importFrom readr read_csv read_table
 #' @export
 readDataset<-function(type, path=NULL, procedure=NULL, url=NULL){
   
-  datasetinfo=list(type=type, path2file=path, procedure=procedure, url=NULL)
-  theDataset=NULL
+  datasetInfo <- list(type=type, path2file=path, procedure=procedure, url=NULL)
+  theDataset <- NULL
   tryCatch(
     expr = 
       {
-        if(datasetinfo$type=="SOS"){
-          message("returning SOS dataset")
-          theDataset <- ReLTER::get_sos_obs(sosURL = datasetinfo$url,
-                                            procedure = datasetinfo$procedure)
-        }
-        if(datasetinfo$type=="raster"){
-          message("returning raster dataset")
-          theDataset <- raster::raster(x = datasetinfo$path2file)
-        }
-        if(datasetinfo$type=="rasterTS"){
-          message("returning rasterTS dataset")
-          theDataset <- raster::brick(x = datasetinfo$path2file)
-        }
-        if(datasetinfo$type=="shapefile"){
-          message("returning spatial feature dataset")
-          theDataset <- sf::st_read(dsn = datasetinfo$path2file)
-        }
-        if(datasetinfo$type=="csv"){
-          message("returning csv dataset")
-          theDataset <- readr::read_csv(datasetinfo$path2file)
+        if(datasetInfo$type %in% c("SOS","raster","rasterTS","shapefile","geoJ{SON")){
+          if(datasetInfo$type=="SOS"){
+            message("returning SOS dataset")
+            theDataset <- ReLTER::get_sos_obs(sosURL = datasetInfo$url,
+                                              procedure = datasetInfo$procedure)
+          }
+          if(datasetInfo$type=="raster"){
+            message("returning raster dataset")
+            theDataset <- raster::raster(x = datasetInfo$path2file)
+          }
+          if(datasetInfo$type=="rasterTS"){
+            message("returning rasterTS dataset")
+            theDataset <- raster::brick(x = datasetInfo$path2file)
+          }
+          if(datasetInfo$type=="shapefile"){
+            message("returning spatial feature dataset")
+            theDataset <- sf::st_read(dsn = datasetInfo$path2file)
+          }
+          if(datasetInfo$type=="geoJSON"){
+            message("returning spatial feature dataset")
+            theDataset <- sf::st_read(dsn = datasetInfo$path2file)
+          }
+        } else {
+          if(endsWith(datasetInfo$path2file,".csv")){# && datasetInfo$type %in% c("csv", "profile", "timeseries")){
+            message("returning rectangular dataset (guess: CSV)")
+            theDataset <- readr::read_csv(datasetInfo$path2file)
+          }
+          if(endsWith(datasetInfo$path2file,".dat")){# && datasetInfo$type=="timeseries" ){
+            message("returning rectangular dataset (guess: space separated)")
+            theDataset <- readr::read_table(datasetInfo$path2file)
+          }
         }
       },
     error=function(e){
       warning("something went wrong while reading dataset, returning NULL")
     })
   return(theDataset)
+}
+
+# NOTE: here the "type" 
+#' get the type of object (a "dataset")
+#' @param x r object
+#' @returns list with datasetType one of "vector", "raster", "rasterTS" (rasterBrick), "data.frame"
+#' @export
+getDatasetObjectTechInfo<-function(x){
+  # here we examine the dataset type and the geometry type
+  # 
+  datasetType <- NULL
+  vector_type <- NULL
+  if("sf" %in% class(x)){
+    datasetType=c(datasetType,"vector")
+    vector_type=sf::st_geometry_type(x, by_geometry = FALSE)
+  }
+  if("RasterBrick" %in% class(x)){
+    datasetType=c(datasetType,"rasterTS")
+  }
+  if("raster" %in% class(x)){
+    datasetType=c(datasetType,"raster")
+  }
+  if("data.frame" %in% class(x)){
+    datasetType=c(datasetType,"data.frame")
+  }
+  res=list(
+    datasetType = datasetType,   
+    vectorType=vector_type) 
+  return(res)
+}
+
+plotDatasetGraph<-function(x, type, ...){
+  if(type=="raster"){
+    x
+  }
+  if(type=="rasterTS"){
+    
+  }
+  if(type=="shapefile"){
+    
+  }
+  if(type=="rectangular"){}
 }
 
 rdsName<-function(name,rdsPath){
