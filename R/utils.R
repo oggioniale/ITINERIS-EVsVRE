@@ -52,15 +52,20 @@ get_jj <- function(url, ...){
 #' @export
 readDataset<-function(type, path=NULL, procedure=NULL, url=NULL){
   
-  datasetInfo <- list(type=type, path2file=path, procedure=procedure, url=NULL)
+  datasetInfo <- list(type=type, path2file=path, procedure=procedure, url=url)
   theDataset <- NULL
   tryCatch(
     expr = 
       {
         if(datasetInfo$type %in% c("SOS","raster","rasterTS","shapefile","geoJ{SON")){
           if(datasetInfo$type=="SOS"){
-            message("returning SOS dataset")
-            theDataset <- ReLTER::get_sos_obs(sosURL = datasetInfo$url,
+            message("returning SOS dataset", datasetInfo$url, datasetInfo$procedure)
+            message(sprintf("ReLTER::get_sos_obs(sosURL = %s,
+                                              procedure = %s)",
+                            datasetInfo$url, 
+                            datasetInfo$procedure
+                            ))
+            theDataset <- ReLTER.get_sos_obs(sosURL = datasetInfo$url,
                                               procedure = datasetInfo$procedure)
           }
           if(datasetInfo$type=="raster"){
@@ -150,6 +155,12 @@ rdsName<-function(name,rdsPath){
 saveObject<-function(o,rdsPath = "~/workspace/", 
                      name = substitute(o)){
   saveRDS(o,rdsName(name, rdsPath))
+}
+
+getMetadata<-function(s){
+  techInfo <- getDatasetObjectTechInfo(s$dataset)
+  md <- s$metadata
+  
 }
 
 #' save object as RDS file. File name defaults to variable name

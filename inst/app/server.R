@@ -178,7 +178,9 @@ function(input, output, session) {
     # load and present site info in panel
     output$siteinfo <- renderUI(tagList(
       a(x$val_title, href=x$val_uri, target="_blank"),
-      div(renderTable(x$tbl_generalInfo %>% as_tibble() %>% select(geoBonBiome, biogeographicalRegion) %>% tidyr::unnest(cols=c("geoBonBiome"))))#,
+      div(renderTable(x$tbl_generalInfo %>% dplyr::as_tibble() %>% 
+                        dplyr::select(geoBonBiome, biogeographicalRegion) %>% 
+                        tidyr::unnest(cols=c("geoBonBiome"))))#,
       # p("Yearly avg precipitation: ", x$val_precipitation, "[", units::deparse_unit(x$val_precipitation), "]"),
       # p("Biome", x$val_geoBonBiome),
       # p("Biogeographical Region:", x$val_biogeographicalRegion),
@@ -204,8 +206,8 @@ function(input, output, session) {
     #withProgress(message="fetching data", {
     x<-broker$getEv()
     datasets$tblEVsData <- broker$getEVsData()
-    datasets$tblOtherResData <- broker$getOtherResData()
-    datasets$tblOtherRepoData <- broker$getOtherRepoData()
+    # datasets$tblOtherResData <- broker$getOtherResData()
+    # datasets$tblOtherRepoData <- broker$getOtherRepoData()
     #})
     shinybusy::remove_modal_spinner()
     #browser()
@@ -295,15 +297,18 @@ function(input, output, session) {
   
   # events on result lists (dataset selection)
   observeEvent(input$tableEVsData_cell_clicked, {
+    shinybusy::show_modal_spinner(text="loading dataset...please wait")
     info <- input$tableEVsData_cell_clicked
     selectedRows <- input$tableEVsData_rows_selected
     message("selected row is", info$row)
     if(any(selectedRows>0) && ! is.null(info) && !is.null(info$row) && info$row > 0 && info$row<=3 ){
+      #getEVsDatasetResultList() %>% .[row_id,]
       dataset <- broker$getActualDataset_EVrelated(info$row)
       theDataset$datasetEv <- dataset
     } else {
       theDataset$datasetEv <- NULL
     }
+    shinybusy::remove_modal_spinner()
 
   })
 
