@@ -89,6 +89,9 @@ function(input, output, session) {
     )
   })
   
+  observeEvent(input$stopApp,{
+    stopApp()
+  })
   observeEvent(input$saveCurrentDataset,{
     message("saving dataset")
     res<-saveDataset(datasetfilename = input$saveCurrentDatasetName,

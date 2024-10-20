@@ -204,6 +204,11 @@ fluidPage(
               shiny::actionButton("saveCurrentDataset",label = "save dataset R object in my workspace"),
               
             )
+          ),
+          fluidRow(
+            box(
+              shiny::actionButton("stopApp",label = "Stop the application"),
+            )
           )
           #
         )
