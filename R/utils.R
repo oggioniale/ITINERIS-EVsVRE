@@ -157,10 +157,25 @@ saveObject<-function(o,rdsPath = "~/workspace/",
   saveRDS(o,rdsName(name, rdsPath))
 }
 
-getMetadata<-function(s){
-  techInfo <- getDatasetObjectTechInfo(s$dataset)
-  md <- s$metadata
-  
+
+#' write to disk in the user folder both the dataset as RDS file and its 
+#' metadata as JSON
+#' @param datasetfilename filename to use for the files, without extension
+#' @param dataset R object to be saved as RDS
+#' @param metadataList a named list containing metadata
+#' @param folder path to the destination folder
+#' @importFrom stringr str_replace_all
+#' @return message a text
+#' @export
+saveDataset<-function(datasetfilename,dataset,metadataList, folder="~/workspace/"){
+  if("/" %in% datasetfilename || "\\" %in% datasetfilename) {
+    #warning("The datasetfilename must not include path characters / or \ .")
+    return("The datasetfilename must not include path characters / or \ .")
+  }
+  fname<-stringr::str_replace_all(datasetfilename, " ", "_")
+  saveObject(dataset, rdsPath = folder, name=datasetfilename)
+  jsonlite::write_json(metadataList,path = paste0(folder,fname,".MD.json"),auto_unbox=T)
+  return(paste("Dataset and metadata saved in folder", folder))
 }
 
 #' save object as RDS file. File name defaults to variable name

@@ -11,7 +11,7 @@ fluidPage(
     # collapse_sidebar = TRUE,
     header = dashboardHeader(
       title = tagList(
-        tags$head(tags$style(HTML('.navbar {
+        tags$head(tags$script(src = "message-handler.js"),tags$style(HTML('.navbar {
                                 background-color: #FFFFFF !important;
                               }
                               .logo {
@@ -149,16 +149,16 @@ fluidPage(
               )
             )
           ),
-          # -- START REMOVE THIS AFTER DEVELOPMENT
-          fluidRow(
-            box(
-              width = 12,
-              title="debug info",
-              status="info",
-              shiny::textOutput("debug")
-            )
-          ),
-          # -- END REMOVE THIS AFTER DEVELOPMENT
+          # # -- START REMOVE THIS AFTER DEVELOPMENT
+          # fluidRow(
+          #   box(
+          #     width = 12,
+          #     title="debug info",
+          #     status="info",
+          #     shiny::textOutput("debug")
+          #   )
+          # ),
+          # # -- END REMOVE THIS AFTER DEVELOPMENT
           fluidRow(
             box(
               width = 12,
@@ -169,17 +169,22 @@ fluidPage(
               collapsible = TRUE,
               enable_sidebar = TRUE,
               tabBox(
+                id="datasetLists",
                 width = 12,
                 # side = "right",
                 # height = "250px",
                 selected = "Map",
                 tabPanel(
-                  "Map",
+                  title="Map",
                   leaflet::leafletOutput("map")
                 ),
                 tabPanel(
-                  "Table",
+                  title="Table",
                   DT::dataTableOutput("tbl")
+                ),
+                tabPanel(
+                  title="Metadata",
+                  DT::dataTableOutput("selectedDatasetMD")
                 )#,
                 # tabPanel(
                 #   "Chart",
@@ -187,7 +192,20 @@ fluidPage(
                 # )
               )
             )
+          ),
+          fluidRow(
+            
+            box(
+              id="saveDataset",
+              width = 12,
+              title="Save dataset in my workspace",
+              status="info",
+              shiny::textInput("saveCurrentDatasetName",label="R object file name:"),
+              shiny::actionButton("saveCurrentDataset",label = "save dataset R object in my workspace"),
+              
+            )
           )
+          #
         )
       )
     )

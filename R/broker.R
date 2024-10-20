@@ -629,7 +629,7 @@ getBroker = function() {
     
     res=list(
       dataset = x,
-      metadata=datasetInfo
+      metadata=datasetInfo %>% dplyr::select(-Id,-path2file)
       )
     # tryCatch(
     #   expr = {
@@ -668,19 +668,74 @@ getBroker = function() {
 
   # obis etc
   getActualDataset_ObisGBifInat <- function(row_id) {
+    
+    y<-getOtherStructuredDatasetResultListForGUI() %>% .[row_id,]
+    landpage<-y$url
+    tryCatch({
+      landpage<-xml2::as_list(xml2::read_html(y$url))$html$body$a[[1]]
+    },
+    error=function(e){}
+    )
+    
+    # y$icon
+    # y$url
+    # y$title
+    # y$resources
+    
     # THIS IS A TEST. assess the row_numbers.
+    metadata<-list(
+      #Id="",
+      deimsUUID=selected_site,
+      #ev_id="",
+      variablename="species_distribution",
+      Var_identifier="species_observation",
+      datasetname=paste0("observations from %s nearby LTER site ", selected_site),
+      MeasurementUnit="[count]",
+      #filename="",
+      #path2file="",
+      #type="",
+      #url=y$url,
+      #procedure="",
+      landingPage=landpage,
+      accessURL="",
+      repo="",
+      #icon_url="",
+      #SpatialCoverage="",
+      #SpatialResolution="",
+      #SpatialUnit="",
+      #TemporalResolution="",
+      #TemporalExtent="",
+      #Active="",
+      License=""
+    )
     if (row_id == 1) {
       message("retrieving GBIF observations")
-      return(search_gbif())
+      x<-search_gbif()
+      metadata["repo"]<-"GBIF"
+      metadata["accessURL"]<-"https://api.gbif.org"
+      metadata["License"]<-"https://www.gbif.org/terms"
     }
     if (row_id == 2) {
       message("retrieving INaturalist observations")
-      return(search_inat())
+      x<-search_inat()
+      metadata["repo"]<-"INaturalist"
+      metadata["accessURL"]<-"https://api.inaturalist.org"
+      metadata["License"]<-"https://www.inaturalist.org/posts/58298-licensed-to-share"
+      
     }
     if (row_id == 3) {
       message("retrieving OBIS observations")
-      return(search_obis())
+      x<-search_obis()
+      metadata["repo"]<-"OBIS"
+      metadata["accessURL"]<-"https://api.obis.org"
+      metadata["License"]<-c("https://manual.obis.org/policy.html","https://manual.obis.org/citing.html")
     }
+    metadata["datasetname"]<-sprintf(metadata[["datasetname"]], metadata[["repo"]])
+    res=list(
+      dataset = x,
+      metadata=metadata
+    )
+    return(res)
   }
   
   # add functions to this named list to export them
@@ -752,8 +807,14 @@ if(FALSE){
   b$setSite(collelongo)
   b$setEv(b$getCurrentEVs()$id[1])
   x<-b$getActualDataset_EVrelated(1)
-
-
+  x<-b$getActualDataset_OtherRes(1)
+  x$metadata
+  
+  names(x$metadata)
+  mdstruct<-x$metadata %>% dplyr::as_tibble() %>% t()
+  jso<-jsonlite::toJSON(mdstruct, auto_unbox=T)
+  jsonlite::prettify(jso)
+  #{ "deimsUUID": "f30007c4-8a6e-4f11-ab87-569db54638fe", "variablename": "species_distribution", "Var_identifier": "species_observation", "datasetname": "observations from GBIF nearby LTER site f30007c4-8a6e-4f11-ab87-569db54638fe", "MeasurementUnit": "[count]", "landingPage": "https://www.gbif.org/dataset/50c9509d-22c7-4a22-a47d-8c48425ef4a7", "accessURL": "https://api.gbif.org", "repo": "GBIF", "License": "" }
   
   b$setSite(deimsUUID)
   b$getSite()
@@ -794,11 +855,11 @@ if(FALSE){
   b$getActualDataset_EVrelated(1)  
   ITINERIS.EVsVRE:::datasets
   
-  ReLTER::get_site_speciesOccurrences(
-    deimsid = paste0("https://deims.org/", collelongo),
-    list_DS = "obis",
-    show_map = FALSE,
-    limit = 500
-  )
+  # ReLTER::get_site_speciesOccurrences(
+  #   deimsid = paste0("https://deims.org/", collelongo),
+  #   list_DS = "obis",
+  #   show_map = FALSE,
+  #   limit = 500
+  # )
   
 }
