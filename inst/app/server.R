@@ -442,8 +442,9 @@ function(input, output, session) {
       
       if(typ$vectorType == "POINT")
         l <- l %>% leaflet::addMarkers(data = currentDataset())
-      if(typ$vectorType == "POLYGON")
+      if(typ$vectorType %in% c("POLYGON","MULTIPOLYGON"))
         l <- l %>% leaflet::addPolygons(data=currentDataset())
+      else warning("TODO: viz vector data of type: ", typ$vectorType)
     }
     if("raster" %in% typ$datasetType){
       l <- l %>% leaflet::addRasterImage(x=currentDataset(), opacity=.8)
