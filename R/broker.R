@@ -622,7 +622,10 @@ getBroker = function() {
     x <- readDataset(type=datasetInfo$type, 
                               path=datasetInfo$path2file, 
                               procedure=datasetInfo$procedure, 
-                              url=datasetInfo$url)
+                              url=datasetInfo$url,
+                     path2nc=datasetInfo$path2nc,
+                     ncVarName=datasetInfo$ncVarName,
+                     level=datasetInfo$level)
 
     # s stand for "structure". It is a list with the actual data
     # plus dataset metadata

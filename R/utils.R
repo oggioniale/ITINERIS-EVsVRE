@@ -74,7 +74,7 @@ readDataset<-function(type, path=NULL, procedure=NULL, url=NULL, path2nc=NULL, n
           }
           if(datasetInfo$type=="rasterTS"){
             message("returning rasterTS dataset")
-            if(!is.null(datasetInfo$path2nc)){
+            if(!is.null(datasetInfo$path2nc) && !is.na(datasetInfo$path2nc)){
               message(" (reading data from nc file)")
               theDataset <- raster::brick(x=datasetInfo$path2nc, varname=datasetInfo$ncVarName, level=datasetInfo$level)
             } else {
