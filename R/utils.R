@@ -50,14 +50,14 @@ get_jj <- function(url, ...){
 #' @importFrom sf st_read
 #' @importFrom readr read_csv read_table
 #' @export
-readDataset<-function(type, path=NULL, procedure=NULL, url=NULL){
+readDataset<-function(type, path=NULL, procedure=NULL, url=NULL, path2nc=NULL, ncVarName=NULL, level=NULL){
   
-  datasetInfo <- list(type=type, path2file=path, procedure=procedure, url=url)
+  datasetInfo <- list(type=type, path2file=path, procedure=procedure, url=url, path2nc=path2nc, ncVarName=ncVarName, level=level)
   theDataset <- NULL
   tryCatch(
     expr = 
       {
-        if(datasetInfo$type %in% c("SOS","raster","rasterTS","shapefile","geoJ{SON")){
+        if(datasetInfo$type %in% c("SOS","raster","rasterTS","shapefile","geoJSON")){
           if(datasetInfo$type=="SOS"){
             message("returning SOS dataset", datasetInfo$url, datasetInfo$procedure)
             message(sprintf("ReLTER::get_sos_obs(sosURL = %s,
@@ -74,7 +74,12 @@ readDataset<-function(type, path=NULL, procedure=NULL, url=NULL){
           }
           if(datasetInfo$type=="rasterTS"){
             message("returning rasterTS dataset")
-            theDataset <- raster::brick(x = datasetInfo$path2file)
+            if(!is.null(datasetInfo$path2nc)){
+              message(" (reading data from nc file)")
+              theDataset <- raster::brick(x=datasetInfo$path2nc, varname=datasetInfo$ncVarName, level=datasetInfo$level)
+            } else {
+              theDataset <- raster::brick(x = datasetInfo$path2file)
+            }
           }
           if(datasetInfo$type=="shapefile"){
             message("returning spatial feature dataset")

@@ -9,7 +9,6 @@ sites<-readxl::read_xlsx(xlsxFile) # SERGI  D:/Projects/ITINERIS/Server/ITINERIS
 EVs<-readxl::read_xlsx(xlsxFile, "EV") # SERGI
 datasets<-readxl::read_xlsx(xlsxFile, "datasets") # SERGI
 
-
 #cat("c(",paste0("\"",names(EVs),"\"",collapse=","),")")
 #cat("c(",paste0("\"",names(sites),"\"",collapse=","),")")
 #cat("c(",paste0("\"",names(datasets),"\"",collapse=","),")")
@@ -17,7 +16,7 @@ neededNamesSites<-c( "id","deimsUUID","name","domain","active","url","alt_name" 
 
 neededNamesDatasets<-c("deimsUUID","ev_id","variablename","datasetname",
                        "filename","path2file","type","url","procedure",
-                       "repo","icon_url")
+                       "repo","icon_url", "path2nc", "ncVarName", "level")
 
 neededNamesEVs<-c( "id","name","type","domain","description","webpage","uom" )
 
