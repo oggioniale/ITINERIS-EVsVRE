@@ -1,6 +1,6 @@
 Package: ITINERIS.EVsVRE
 Title: What the Package Does (One Line, Title Case)
-Version: 1.0.5.5
+Version: 1.0.5.7
 Authors@R: 
     person("First", "Last", , "first.last@example.com", role = c("aut", "cre"),
            comment = c(ORCID = "YOUR-ORCID-ID"))
