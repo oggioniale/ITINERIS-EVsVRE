@@ -36,6 +36,7 @@
 #' If hits=TRUE return only the `numeric` number of matched records on the server.
 #' If debug=TRUE, the output is a `character` with the (not perfomed) 
 #' request url.
+#' @author Paolo Tagliolato (ptagliolato)
 #' @examples
 #' # example code
 #' \dontrun{
@@ -124,6 +125,7 @@
 #' @importFrom stringr str_squish
 #' @importFrom tibble tibble
 #' @importFrom sf st_polygon st_sfc st_sf
+#' @export
 get_itineris_csw_records <- function(
     keywords=NULL,
     bbox = NULL,
