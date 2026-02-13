@@ -38,7 +38,7 @@
 #' request url.
 #' @examples
 #' # example code
-#' 
+#' \dontrun{
 #' # return only the number of matches for a query and bbox
 #' get_itineris_csw_records(
 #'   hits=T,
@@ -115,6 +115,7 @@
 #'       fillOpacity = 0.5
 #'     )
 #'   )
+#' }
 #' }
 #' 
 #' @importFrom httr GET content
