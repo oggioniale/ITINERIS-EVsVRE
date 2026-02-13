@@ -19,9 +19,11 @@
 #' into sf polygons (EPSG:4326).
 #'
 #' @param keywords Character vector of keywords (used in AnyText LIKE CQL filter). 
-#' If bbox is NULL, keywords must be specified
+#' If bbox is NULL, keywords must be specified, 
+#' otherwise the function operates with hits=TRUE
 #' @param bbox numeric vector c(xmin, ymin, xmax, ymax). 
-#' If keywords is NULL, bbox must be specified
+#' If keywords is NULL, bbox must be specified, 
+#' otherwise the function operates with hits=TRUE
 #' @param csw_url CSW endpoint URL (default ITINERIS GeoNetwork)
 #' @param return_sf Logical; if TRUE returns an sf object when extent is available
 #' @param maxRecords Maximum number of records to request (default 100)
@@ -29,11 +31,15 @@
 #'        schema is used instead of full ISO gmd (default 100)
 #' @param hits Retrieve only the number of matched records.
 #' @param debug do not perform any request, just output the request url.
-#'
+#' @param additionalParams named `list` for additional parameters. key-value pairs 
+#' are added (or substituted) to the CSW GET request. 
+#' E.g. list(elementSetName="full",typeNames="csw:Record"), 
+#' useful if the user specifies a different CSW server 
+#' that needs different parameters. (default list())
 #' @return A `tibble` or `sf` object with harmonised metadata fields. 
-#' If no record is matched on the server, the object is a tibble or sf with no rows
-#' If neither keywords nor bbox is specified, the function returns `NULL`.
-#' If hits=TRUE return only the `numeric` number of matched records on the server.
+#' If no record is matched on the server, the object is a tibble or sf with no rows 
+#' If hits=TRUE return only the `numeric` number of matched records on the server. 
+#' If neither keywords nor bbox is specified, the function automatically sets hits=TRUE.
 #' If debug=TRUE, the output is a `character` with the (not perfomed) 
 #' request url.
 #' @author Paolo Tagliolato (ptagliolato)
@@ -42,7 +48,7 @@
 #' \dontrun{
 #' # return only the number of matches for a query and bbox
 #' get_itineris_csw_records(
-#'   hits=T,
+#'   hits=T, 
 #'   keywords = c("turbidity", "phytoplankton"), 
 #'   bbox = c(12.26, 45.42, 12.43, 45.50)
 #' )
@@ -125,6 +131,7 @@
 #' @importFrom stringr str_squish
 #' @importFrom tibble tibble
 #' @importFrom sf st_polygon st_sfc st_sf
+#' @importFrom utils modifyList
 #' @export
 get_itineris_csw_records <- function(
     keywords=NULL,
@@ -134,22 +141,33 @@ get_itineris_csw_records <- function(
     maxRecords = 100,
     threshold_full = 100,
     hits = FALSE,
-    debug = FALSE
+    debug = FALSE,
+    additionalParams=list()
 ) {
   
   if (is.null(csw_url)) {
     csw_url <- "https://geonetwork.itineris.cnr.it/geonetwork/srv/eng/csw"
+  
   }
   
-  if(is.null(keywords) && is.null(bbox)){
-    warning("One of keywords or bbox must be specified. I return NULL")
-    return(NULL)
+  if(is.null(keywords) && is.null(bbox) && hits==FALSE){
+    warning("keywords and bbox are empty. 
+            I request only the number of matching records, 
+            setting hits=TRUE from now on")
+    # backdoor 
+    hits=TRUE
+    if(#csw_url != "https://geonetwork.itineris.cnr.it/geonetwork/srv/eng/csw" && 
+       length(additionalParams)!=0 &&
+       "resultType" %in% names(additionalParams) &&
+       additionalParams[["resultType"]]=="results") hits=FALSE
   }
   
   
   # ---- Internal: build CQL filter ----
   build_cql <- function(keywords, bbox = NULL) {
-    
+    if(is.null(keywords)&& is.null(bbox)){
+      return("")
+    }
     keyword_filters <- purrr::map_chr(keywords, function(k) {
       if(is.null(keywords)) return(NULL)
       k_trim <- stringr::str_squish(k)
@@ -190,18 +208,30 @@ get_itineris_csw_records <- function(
   
   cql_filter <- build_cql(keywords, bbox)
   
+  
+  #elementSetName=full&typeNames=csw:Record
+  constr_list<-list()
+  
+  if(cql_filter!=""){
+    constr_list<-list(
+      CONSTRAINTLANGUAGE = "CQL_TEXT",
+      CONSTRAINT_LANGUAGE_VERSION = "1.1.0",
+      CONSTRAINT = cql_filter
+    )
+  }
   # ---- STEP 1: hits request (count only) ----
   params_hits <- list(
     service = "CSW",
     version = "2.0.2",
     request = "GetRecords",
     resultType = "hits",
-    typeNames = "gmd:MD_Metadata",
-    CONSTRAINTLANGUAGE = "CQL_TEXT",
-    CONSTRAINT_LANGUAGE_VERSION = "1.1.0",
-    CONSTRAINT = cql_filter
-  )
+    typeNames = "gmd:MD_Metadata"
+  ) %>% 
+    utils::modifyList(constr_list) %>% 
+    utils::modifyList(additionalParams)
   
+  
+ 
   if(debug){
     message("[debug] querying hits: ", httr::modify_url(csw_url, query = params_hits))
   }
@@ -278,11 +308,13 @@ get_itineris_csw_records <- function(
     resultType = "results",
     typeNames = "gmd:MD_Metadata",
     outputSchema = output_schema,
-    maxRecords = maxRecords,
-    CONSTRAINTLANGUAGE = "CQL_TEXT",
-    CONSTRAINT_LANGUAGE_VERSION = "1.1.0",
-    CONSTRAINT = cql_filter
-  )
+    maxRecords = maxRecords
+  ) %>%
+    utils::modifyList(constr_list) %>% 
+    utils::modifyList(additionalParams)
+  
+  
+  
   
   if(debug){
     message("[debug] returning request url with query, no request is performed")
@@ -420,34 +452,4 @@ get_itineris_csw_records <- function(
   }
   
   return(df)
-}
-
-#### esempi ---------
-if(FALSE){
-df_sf2 <- get_itineris_csw_records(hits=T,keywords = c("turbidity", "phytoplankton"), threshold_full = 20, bbox = c(12.26, 45.42, 12.43, 45.50), return_sf = F)
-df_sf2 <- get_itineris_csw_records(keywords = c("marine ecosystem productivity"), threshold_full = 20, bbox = c(8, 44, 14, 46), return_sf = F)
-df_sf2 <- get_itineris_csw_records(keywords = c("%ecosystem productivity%"), threshold_full = 20, bbox = c(8, 44, 14, 46), return_sf = F)
-df_sf2 <- get_itineris_csw_records(keywords = c("%marine%"), threshold_full = 20, bbox = c(8, 44, 14, 46), return_sf = F)
-
-# solo bbx
-get_itineris_csw_records(debug=F, hits=T, threshold_full = 20, bbox = c(12.26, 45.42, 12.43, 45.50), return_sf = F)
-
-# solo keywords
-get_itineris_csw_records(debug=F, hits=T, threshold_full = 20, keywords = c("phytoplankton"), return_sf = F)
-
-# entrambi
-get_itineris_csw_records(debug=F, hits=T, threshold_full = 20, 
-                         keywords = c("phytoplankton"), 
-                         bbox = c(12.26, 45.42, 12.43, 45.50), 
-                         return_sf = F)
-
-# nessuno
-get_itineris_csw_records(debug=T, hits=T, threshold_full = 20, 
-                         return_sf = F)
-
-df_sf2 %>% View
-}
-
-if(FALSE){
-  
 }
