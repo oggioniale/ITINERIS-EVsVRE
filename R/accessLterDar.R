@@ -45,24 +45,23 @@
 #' @examples
 #' \dontrun{
 #' # Create query function for a CSW endpoint
-#' csw_url <- "https://dataregistry.lteritalia.it/catalogue/csw"
-#' getRecords <- make_getRecords_bbox_jqr(csw_url)
+#' getDARRecords <- make_getRecords_bbox_jqr()
 #'
 #' # Get all records
-#' all_records <- getRecords()
+#' all_records <- getDARRecords()
 #'
 #' # Apply a spatial filter
 #' bbox_filter <- c(xmin = 12.30, ymin = 45.34, xmax = 12.31, ymax = 45.35)
-#' filtered <- getRecords(bbox_filter = bbox_filter)
+#' filtered <- getDARRecords(bbox_filter = bbox_filter)
 #'
 #' # Apply a keyword search too
-#' keyword_results <- getRecords(keyword = "temperature")
+#' keyword_results <- getDARRecords(keyword = "temperature")
 #'
 #' # Filter by date
-#' date_result <- getRecords(date_range = c("2025-01-01", "2025-12-31"))
+#' date_result <- getDARRecords(date_range = c("2025-01-01", "2025-12-31"))
 #' 
 #' # all filters
-#' records_all <- getRecords(
+#' records_all <- getDARRecords(
 #'   bbox_filter = bbox_filter,
 #'   keyword = "temperature",
 #'   date_range = c("2025-01-01", "2025-12-31")
